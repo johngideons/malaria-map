@@ -8,52 +8,60 @@ function App() {
   const mapContainer = useRef(null);
   const map = useRef(null);
 
-  useEffect(() => {
-    if (map.current) return;
+useEffect(() => {
+  if (map.current) return;
 
+  map.current = new mapboxgl.Map({
+    container: mapContainer.current,
+    style: 'mapbox://styles/mapbox/light-v11',
+    center: [0, 20],
+    zoom: 2,
+  });
 
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11',
-      center: [0, 20],
-      zoom: 2,
+  map.current.on('load', () => {
+    map.current.addSource('admin-boundaries', {
+      type: 'vector',
+      url: 'mapbox://ksymes.2bolqz9e',  // Replace with your tileset URL
     });
-        // Example of adding a custom tileset as a vector tile source
-    map.current.on('load', () => {
-      map.current.addSource('admin-boundaries', {
-        type: 'vector',
-        url: 'mapbox://ksymes.2bolqz9e',  // Replace with your tileset URL
-      });
+
+    // Fill layer for malaria risk
     map.current.addLayer({
       id: 'disease-risk-layer',
       type: 'fill',
       source: 'admin-boundaries',
-      'source-layer': 'ADM0-6f4iy3', // the layer name inside your tileset
+      'source-layer': 'ADM0-6f4iy3',
       paint: {
         'fill-color': [
           'match',
           ['get', 'MALARIA_RISK'],
-          '4', '#ff0000',       // Red
-          '3', '#ffa500',   // Orange
-          '2', '#ffff00',        // Yellow
-          '1', '#00ff00',       // Green
-          '#cccccc' // default (gray)
+          '4', '#ff0000',
+          '3', '#ffa500',
+          '2', '#ffff00',
+          '1', '#00ff00',
+          '#cccccc'
         ],
         'fill-opacity': 0.6
       }
     });
+
+    // Line layer for boundaries
+    map.current.addLayer({
+      id: 'boundary-lines',
+      type: 'line',
+      source: 'admin-boundaries',
+      'source-layer': 'ADM0-6f4iy3',
+      paint: {
+        'line-color': '#d3d3d3', // light grey
+        'line-width': 1
+      }
     });
+  });
 
+  map.current.scrollZoom.enable();
+  map.current.scrollZoom.setWheelZoomRate(3);
+  map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+}, []);
 
-
-
-    // Faster mouse wheel zoom
-    map.current.scrollZoom.enable();
-    map.current.scrollZoom.setWheelZoomRate(3);
-
-    // Built-in controls (optional)
-    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
-  }, []);
 
   // Custom zoom handlers
   const zoomIn = () => {
