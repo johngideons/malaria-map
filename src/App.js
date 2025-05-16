@@ -20,22 +20,31 @@ function App() {
     });
         // Example of adding a custom tileset as a vector tile source
     map.current.on('load', () => {
-      map.current.addSource('custom-tileset', {
+      map.current.addSource('admin-boundaries', {
         type: 'vector',
-        url: 'mapbox://ksymes.2r1963to',  // Replace with your tileset URL
+        url: 'mapbox://ksymes.2bolqz9e',  // Replace with your tileset URL
       });
-
-      map.current.addLayer({
-        id: 'custom-layer',
-        type: 'fill',  // You can change this based on your tileset type
-        source: 'custom-tileset',
-        'source-layer': 'ne_10m_admin_0_map_units-10f1rr',  // Layer name inside your tileset
-        paint: {
-          'fill-color': '#008000',
-          'fill-opacity': 0.5,
-        },
-      });
+    map.current.addLayer({
+      id: 'disease-risk-layer',
+      type: 'fill',
+      source: 'admin-boundaries',
+      'source-layer': 'ADM0-6f4iy3', // the layer name inside your tileset
+      paint: {
+        'fill-color': [
+          'match',
+          ['get', 'MALARIA_RISK'],
+          '4', '#ff0000',       // Red
+          '3', '#ffa500',   // Orange
+          '2', '#ffff00',        // Yellow
+          '1', '#00ff00',       // Green
+          '#cccccc' // default (gray)
+        ],
+        'fill-opacity': 0.6
+      }
     });
+    });
+
+
 
 
     // Faster mouse wheel zoom
@@ -64,6 +73,14 @@ function App() {
         <button onClick={zoomIn}>＋</button>
         <button onClick={zoomOut}>−</button>
       </div>
+      <div className="map-legend">
+        <h4>Malaria Risk Levels</h4>
+        <div><span className="legend-color" style={{ background: '#ff0000' }}></span> High Risk</div>
+        <div><span className="legend-color" style={{ background: '#ffa500' }}></span> Moderate Risk</div>
+        <div><span className="legend-color" style={{ background: '#ffff00' }}></span> Low Risk</div>
+        <div><span className="legend-color" style={{ background: '#00ff00' }}></span> No Known Risk</div>
+      </div>
+
     </div>
   );
 }

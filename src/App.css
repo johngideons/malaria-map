@@ -1,5 +1,5 @@
 .map-container {
-  height: 100vh;
+  height: 90vh;
   width: 100%;
   position: relative;
 }
@@ -26,4 +26,30 @@
 
 .zoom-controls button:hover {
   background-color: #eee;
+}
+
+.map-legend {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  z-index: 1;
+}
+
+.map-legend h4 {
+  margin: 0 0 8px;
+  font-weight: bold;
+}
+
+.legend-color {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin-right: 6px;
+  border: 1px solid #888;
+  vertical-align: middle;
 }
