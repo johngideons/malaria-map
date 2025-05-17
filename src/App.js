@@ -8,62 +8,117 @@ function App() {
   const mapContainer = useRef(null);
   const map = useRef(null);
 
-useEffect(() => {
-  if (map.current) return;
+  useEffect(() => {
+    if (map.current) return;
 
-  map.current = new mapboxgl.Map({
-    container: mapContainer.current,
-    style: 'mapbox://styles/mapbox/light-v11',
-    center: [0, 20],
-    zoom: 2,
-  });
-
-  map.current.on('load', () => {
-    map.current.addSource('admin-boundaries', {
-      type: 'vector',
-      url: 'mapbox://ksymes.2bolqz9e',  // Replace with your tileset URL
+    map.current = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: 'mapbox://styles/mapbox/light-v11',
+      center: [-98, 39], // Center on the USA
+      zoom: 2,
     });
 
-    // Fill layer for malaria risk
-    map.current.addLayer({
-      id: 'disease-risk-layer',
-      type: 'fill',
-      source: 'admin-boundaries',
-      'source-layer': 'ADM0-6f4iy3',
-      paint: {
-        'fill-color': [
-          'match',
-          ['get', 'MALARIA_RISK'],
-          '4', '#ff0000',
-          '3', '#ffa500',
-          '2', '#ffff00',
-          '1', '#00ff00',
-          '#cccccc'
-        ],
-        'fill-opacity': 0.6
-      }
+    map.current.on('load', () => {
+      // Add all sources
+      map.current.addSource('admin-boundaries', {
+        type: 'vector',
+        url: 'mapbox://ksymes.2bolqz9e',
+      });
+
+      map.current.addSource('us-admin1', {
+        type: 'vector',
+        url: 'mapbox://ksymes.2ticiwrd',
+      });
+
+      map.current.addSource('us-admin2', {
+        type: 'vector',
+        url: 'mapbox://ksymes.2cfmv9jr',
+      });
+
+      // National-level (ADM0) fill
+      map.current.addLayer({
+        id: 'adm0-risk',
+        type: 'fill',
+        source: 'admin-boundaries',
+        'source-layer': 'ADM0-6f4iy3',
+        minzoom: 0,
+        maxzoom: 3, // Only show at low zoom levels
+        paint: {
+          'fill-color': [
+            'match',
+            ['get', 'MALARIA_RISK'],
+            '4', '#ff0000',
+            '3', '#ffa500',
+            '2', '#ffff00',
+            '1', '#00ff00',
+            '#cccccc'
+          ],
+          'fill-opacity': 0.6
+        }
+      });
+
+      // State-level (ADM1) fill
+      map.current.addLayer({
+        id: 'us-admin1-risk',
+        type: 'fill',
+        source: 'us-admin1',
+        'source-layer': 'us_admin1-8mciso',
+        minzoom: 3,
+        maxzoom: 6, // Show at medium zoom
+        paint: {
+          'fill-color': [
+            'match',
+            ['get', 'Risk_Level'],
+            4, '#ff0000',
+            3, '#ffa500',
+            2, '#ffff00',
+            1, '#00ff00',
+            '#cccccc'
+          ],
+          'fill-opacity': 0.6
+        }
+      });
+
+      // County-level (ADM2) fill
+      map.current.addLayer({
+        id: 'us-admin2-risk',
+        type: 'fill',
+        source: 'us-admin2',
+        'source-layer': 'us_admin2-a06jog',
+        minzoom: 6, // Only show at high zoom
+        paint: {
+          'fill-color': [
+            'match',
+            ['get', 'Level'],
+            4, '#ff0000',
+            3, '#ffa500',
+            2, '#ffff00',
+            1, '#00ff00',
+            '#cccccc'
+          ],
+          'fill-opacity': 0.6
+        }
+      });
+
+      // Outline layer for all zooms (optional)
+      map.current.addLayer({
+        id: 'us-boundary-lines',
+        type: 'line',
+        source: 'us-admin2',
+        'source-layer': 'us_admin2-a06jog',
+        minzoom: 6, 
+        paint: {
+          'line-color': '#d3d3d3',
+          'line-width': 1
+        }
+      });
     });
 
-    // Line layer for boundaries
-    map.current.addLayer({
-      id: 'boundary-lines',
-      type: 'line',
-      source: 'admin-boundaries',
-      'source-layer': 'ADM0-6f4iy3',
-      paint: {
-        'line-color': '#d3d3d3', // light grey
-        'line-width': 1
-      }
-    });
-  });
+    map.current.scrollZoom.enable();
+    map.current.scrollZoom.setWheelZoomRate(3);
+    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+  }, []);
 
-  map.current.scrollZoom.enable();
-  map.current.scrollZoom.setWheelZoomRate(3);
-  map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
-}, []);
-
-
-  // Custom zoom handlers
   const zoomIn = () => {
     if (!map.current) return;
     map.current.zoomTo(map.current.getZoom() + 1);
@@ -88,7 +143,6 @@ useEffect(() => {
         <div><span className="legend-color" style={{ background: '#ffff00' }}></span> Low Risk</div>
         <div><span className="legend-color" style={{ background: '#00ff00' }}></span> No Known Risk</div>
       </div>
-
     </div>
   );
 }
