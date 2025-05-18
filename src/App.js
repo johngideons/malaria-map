@@ -32,7 +32,7 @@ function App() {
 
       map.current.addSource('us-admin2', {
         type: 'vector',
-        url: 'mapbox://ksymes.2cfmv9jr',
+        url: 'mapbox://ksymes.3t4a391a',
       });
 
       // National-level (ADM0) fill
@@ -84,7 +84,7 @@ function App() {
         id: 'us-admin2-risk',
         type: 'fill',
         source: 'us-admin2',
-        'source-layer': 'us_admin2-a06jog',
+        'source-layer': 'us_admin2-aufexs',
         minzoom: 6, // Only show at high zoom
         paint: {
           'fill-color': [
@@ -105,10 +105,10 @@ function App() {
         id: 'us-boundary-lines',
         type: 'line',
         source: 'us-admin2',
-        'source-layer': 'us_admin2-a06jog',
+        'source-layer': 'us_admin2-aufexs',
         minzoom: 6, 
         paint: {
-          'line-color': '#d3d3d3',
+          'line-color': '#000000',
           'line-width': 1
         }
       });
