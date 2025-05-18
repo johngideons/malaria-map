@@ -143,7 +143,7 @@ function App() {
 
             // US boundary lines
       map.current.addLayer({
-        id: 'us-boundary-lines0',
+        id: 'us-boundary-lines1',
         type: 'line',
         source: 'us-admin1',
         'source-layer': 'us_admin1-8mciso',
