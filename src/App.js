@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import './App.css';
 
@@ -7,6 +7,7 @@ mapboxgl.accessToken = process.env.REACT_APP_MAPBOX_TOKEN;
 function App() {
   const mapContainer = useRef(null);
   const map = useRef(null);
+  const [elevationVisible, setElevationVisible] = useState(false);
 
   useEffect(() => {
     if (map.current) return;
@@ -14,12 +15,12 @@ function App() {
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/light-v11',
-      center: [-98, 39], // Center on the USA
+      center: [-98, 39],
       zoom: 2,
     });
 
     map.current.on('load', () => {
-      // Add all sources
+      // Admin boundaries and risk levels
       map.current.addSource('admin-boundaries', {
         type: 'vector',
         url: 'mapbox://ksymes.2bolqz9e',
@@ -35,14 +36,13 @@ function App() {
         url: 'mapbox://ksymes.3t4a391a',
       });
 
-      // National-level (ADM0) fill
       map.current.addLayer({
         id: 'adm0-risk',
         type: 'fill',
         source: 'admin-boundaries',
         'source-layer': 'ADM0-6f4iy3',
         minzoom: 0,
-        maxzoom: 3, // Only show at low zoom levels
+        maxzoom: 3,
         paint: {
           'fill-color': [
             'match',
@@ -57,14 +57,13 @@ function App() {
         }
       });
 
-      // State-level (ADM1) fill
       map.current.addLayer({
         id: 'us-admin1-risk',
         type: 'fill',
         source: 'us-admin1',
         'source-layer': 'us_admin1-8mciso',
         minzoom: 3,
-        maxzoom: 6, // Show at medium zoom
+        maxzoom: 6,
         paint: {
           'fill-color': [
             'match',
@@ -79,13 +78,12 @@ function App() {
         }
       });
 
-      // County-level (ADM2) fill
       map.current.addLayer({
         id: 'us-admin2-risk',
         type: 'fill',
         source: 'us-admin2',
         'source-layer': 'us_admin2-aufexs',
-        minzoom: 6, // Only show at high zoom
+        minzoom: 6,
         paint: {
           'fill-color': [
             'match',
@@ -100,24 +98,82 @@ function App() {
         }
       });
 
-      // Outline layer for all zooms (optional)
+      // GEE Elevation Raster Layer
+      map.current.addSource('ee-dem', {
+        type: 'raster',
+        tiles: [
+          'https://earthengine.googleapis.com/v1/projects/ee-jsaita47/maps/43265f5115ccb45ab4ecb4925cce7b80-d80fd97724da03dd73552796343ab64d/tiles/{z}/{x}/{y}'
+        ],
+        tileSize: 256
+      });
+
+      map.current.addLayer({
+        id: 'ee-dem',
+        type: 'raster',
+        source: 'ee-dem',
+        layout: { visibility: 'none' },
+        paint: {}
+      });
+
+      // US boundary lines
       map.current.addLayer({
         id: 'us-boundary-lines',
         type: 'line',
         source: 'us-admin2',
         'source-layer': 'us_admin2-aufexs',
-        minzoom: 6, 
+        minzoom: 6,
         paint: {
           'line-color': '#000000',
           'line-width': 1
         }
       });
-    });
+            // US boundary lines
+      map.current.addLayer({
+        id: 'us-boundary-lines0',
+        type: 'line',
+        source: 'admin-boundaries',
+        'source-layer': 'ADM0-6f4iy3',
+        minzoom: 0,
+        maxzoom: 3,
+        paint: {
+          'line-color': '#000000',
+          'line-width': 1
+        }
+      });
 
-    map.current.scrollZoom.enable();
-    map.current.scrollZoom.setWheelZoomRate(3);
-    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+            // US boundary lines
+      map.current.addLayer({
+        id: 'us-boundary-lines0',
+        type: 'line',
+        source: 'us-admin1',
+        'source-layer': 'us_admin1-8mciso',
+        minzoom: 3,
+        maxzoom: 6,
+        paint: {
+          'line-color': '#000000',
+          'line-width': 1
+        }
+      });
+
+
+
+      map.current.scrollZoom.enable();
+      map.current.scrollZoom.setWheelZoomRate(3);
+      map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    });
   }, []);
+
+  const toggleElevation = () => {
+    if (!map.current) return;
+    const visibility = map.current.getLayoutProperty('ee-dem', 'visibility');
+    if (visibility === 'visible') {
+      map.current.setLayoutProperty('ee-dem', 'visibility', 'none');
+      setElevationVisible(false);
+    } else {
+      map.current.setLayoutProperty('ee-dem', 'visibility', 'visible');
+      setElevationVisible(true);
+    }
+  };
 
   const zoomIn = () => {
     if (!map.current) return;
@@ -135,6 +191,9 @@ function App() {
       <div className="zoom-controls">
         <button onClick={zoomIn}>＋</button>
         <button onClick={zoomOut}>−</button>
+        <button onClick={toggleElevation}>
+          {elevationVisible ? 'Hide Elevation' : 'Show Elevation'}
+        </button>
       </div>
       <div className="map-legend">
         <h4>Malaria Risk Levels</h4>
@@ -142,6 +201,11 @@ function App() {
         <div><span className="legend-color" style={{ background: '#ffa500' }}></span> Moderate Risk</div>
         <div><span className="legend-color" style={{ background: '#ffff00' }}></span> Low Risk</div>
         <div><span className="legend-color" style={{ background: '#00ff00' }}></span> No Known Risk</div>
+        <h4>Elevation (m)</h4>
+        <div><span className="legend-color" style={{ background: '#ff0000' }}></span> Below 1000</div>
+        <div><span className="legend-color" style={{ background: '#ffff00' }}></span> 1000 - 2000</div>
+        <div><span className="legend-color" style={{ background: '#ffa500' }}></span> 2000 - 3000</div>
+        <div><span className="legend-color" style={{ background: '#00ff00' }}></span> Above 3000</div>
       </div>
     </div>
   );
