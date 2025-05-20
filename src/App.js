@@ -94,7 +94,7 @@ function App() {
             1, '#00ff00',
             '#cccccc'
           ],
-          'fill-opacity': 0.6
+          'fill-opacity': 0.5
         }
       });
 
@@ -123,8 +123,8 @@ function App() {
         'source-layer': 'us_admin2-aufexs',
         minzoom: 6,
         paint: {
-          'line-color': '#000000',
-          'line-width': 1
+          'line-color': '#5A5A5A',
+          'line-width': 0.5
         }
       });
             // US boundary lines
@@ -136,8 +136,8 @@ function App() {
         minzoom: 0,
         maxzoom: 3,
         paint: {
-          'line-color': '#000000',
-          'line-width': 1
+          'line-color': '#5A5A5A',
+          'line-width': 0.5
         }
       });
 
@@ -150,8 +150,8 @@ function App() {
         minzoom: 3,
         maxzoom: 6,
         paint: {
-          'line-color': '#000000',
-          'line-width': 1
+          'line-color': '#5A5A5A',
+          'line-width': 0.8
         }
       });
 
