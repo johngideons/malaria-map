@@ -185,30 +185,68 @@ function App() {
     map.current.zoomTo(map.current.getZoom() - 1);
   };
 
-  return (
-    <div className="App">
-      <div ref={mapContainer} className="map-container" />
-      <div className="zoom-controls">
-        <button onClick={zoomIn}>＋</button>
-        <button onClick={zoomOut}>−</button>
-        <button onClick={toggleElevation}>
-          {elevationVisible ? 'Hide Elevation' : 'Show Elevation'}
-        </button>
+return (
+  <div className="App">
+    {/* Menu Bar */}
+    <header className="menu-bar">
+      <div className="logo">GIDEON</div>
+      <nav className="nav-links">
+        <a href="#">Explore</a>
+        <a href="#">Lab</a>
+        <a href="#">Diagnose</a>
+        <a href="#">Visualize</a>
+        <a href="#">Compare</a>
+        <a href="#">A-Z</a>
+        <a href="#">More</a>
+      </nav>
+      <div className="search-bar">
+        <input type="text" placeholder="Search..." />
       </div>
-      <div className="map-legend">
-        <h4>Malaria Risk Levels</h4>
-        <div><span className="legend-color" style={{ background: '#ff0000' }}></span> High Risk</div>
-        <div><span className="legend-color" style={{ background: '#ffa500' }}></span> Moderate Risk</div>
-        <div><span className="legend-color" style={{ background: '#ffff00' }}></span> Low Risk</div>
-        <div><span className="legend-color" style={{ background: '#00ff00' }}></span> No Known Risk</div>
-        <h4>Elevation (m)</h4>
-        <div><span className="legend-color" style={{ background: '#ff0000' }}></span> Below 1000</div>
-        <div><span className="legend-color" style={{ background: '#ffff00' }}></span> 1000 - 2000</div>
-        <div><span className="legend-color" style={{ background: '#ffa500' }}></span> 2000 - 3000</div>
-        <div><span className="legend-color" style={{ background: '#00ff00' }}></span> Above 3000</div>
-      </div>
+    </header>
+
+    {/* Map Container */}
+    <div ref={mapContainer} className="map-container" />
+
+    {/* Controls */}
+  <div className="zoom-controls-left">
+    <button onClick={zoomIn}>＋</button>
+    <button onClick={zoomOut}>−</button>
+  </div>
+
+  <div className="zoom-controls-right">
+    <button onClick={toggleElevation}>
+      {elevationVisible ? 'Hide Elevation' : 'Show Elevation'}
+    </button>
+  </div>
+
+
+    {/* Legend */}
+    <div className="map-legend">
+      <h4>Malaria Risk Levels</h4>
+      <div><span className="legend-color" style={{ background: '#ff0000' }}></span> High Risk</div>
+      <div><span className="legend-color" style={{ background: '#ffa500' }}></span> Moderate Risk</div>
+      <div><span className="legend-color" style={{ background: '#ffff00' }}></span> Low Risk</div>
+      <div><span className="legend-color" style={{ background: '#00ff00' }}></span> No Known Risk</div>
+      <h4>Elevation (m)</h4>
+      <div><span className="legend-color" style={{ background: '#ff0000' }}></span> Below 1000</div>
+      <div><span className="legend-color" style={{ background: '#ffff00' }}></span> 1000 - 2000</div>
+      <div><span className="legend-color" style={{ background: '#ffa500' }}></span> 2000 - 3000</div>
+      <div><span className="legend-color" style={{ background: '#00ff00' }}></span> Above 3000</div>
     </div>
-  );
+
+    {/* Footer */}
+    <footer className="footer">
+      <div>Copyright © 1994 - 2025 GIDEON Informatics, Inc. All Rights Reserved.</div>
+      <div className="footer-links">
+        <a href="#">Site Map</a>
+        <a href="#">Help</a>
+        <a href="#">License Agreement</a>
+        <a href="#">Get in touch</a>
+      </div>
+    </footer>
+  </div>
+);
+
 }
 
 export default App;
