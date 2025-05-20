@@ -31,11 +31,6 @@ function App() {
         url: 'mapbox://ksymes.2ticiwrd',
       });
 
-      map.current.addSource('us-admin2', {
-        type: 'vector',
-        url: 'mapbox://ksymes.3t4a391a',
-      });
-
       map.current.addLayer({
         id: 'adm0-risk',
         type: 'fill',
@@ -78,31 +73,11 @@ function App() {
         }
       });
 
-      map.current.addLayer({
-        id: 'us-admin2-risk',
-        type: 'fill',
-        source: 'us-admin2',
-        'source-layer': 'us_admin2-aufexs',
-        minzoom: 6,
-        paint: {
-          'fill-color': [
-            'match',
-            ['get', 'Level'],
-            4, '#ff0000',
-            3, '#ffa500',
-            2, '#ffff00',
-            1, '#00ff00',
-            '#cccccc'
-          ],
-          'fill-opacity': 0.5
-        }
-      });
-
       // GEE Elevation Raster Layer
       map.current.addSource('ee-dem', {
         type: 'raster',
         tiles: [
-          'https://earthengine.googleapis.com/v1/projects/ee-jsaita47/maps/43265f5115ccb45ab4ecb4925cce7b80-d80fd97724da03dd73552796343ab64d/tiles/{z}/{x}/{y}'
+          'https://earthengine.googleapis.com/v1/projects/ee-jsaita47/maps/bfbb261a1c4bca8b3b718354d853db69-a1db5078f70e08ee64e84c6fc6388bae/tiles/{z}/{x}/{y}'
         ],
         tileSize: 256
       });
@@ -112,22 +87,29 @@ function App() {
         type: 'raster',
         source: 'ee-dem',
         layout: { visibility: 'none' },
-        paint: {}
+        paint: {'fill-opacity': 0.2}
+      });
+
+      // Admin Level 2 raster boundaries (new layer)
+      map.current.addSource('admin3-boundaries', {
+        type: 'raster',
+        tiles: [
+          'https://earthengine.googleapis.com/v1/projects/ee-jsaita47/maps/5fff165bf2d96bafa5109889d958cf11-f9f2ee5df91b80d53be0f58517a110fb/tiles/{z}/{x}/{y}' // Replace with actual tile URL
+        ],
+        tileSize: 256
+      });
+
+      map.current.addLayer({
+        id: 'admin3-boundaries-layer',
+        type: 'raster',
+        source: 'admin3-boundaries',
+        minzoom: 6,
+        maxzoom: 24,
+        layout: { visibility: 'visible' },
+        paint: {'fill-opacity': 0.4}
       });
 
       // US boundary lines
-      map.current.addLayer({
-        id: 'us-boundary-lines',
-        type: 'line',
-        source: 'us-admin2',
-        'source-layer': 'us_admin2-aufexs',
-        minzoom: 6,
-        paint: {
-          'line-color': '#5A5A5A',
-          'line-width': 0.5
-        }
-      });
-            // US boundary lines
       map.current.addLayer({
         id: 'us-boundary-lines0',
         type: 'line',
@@ -141,7 +123,6 @@ function App() {
         }
       });
 
-            // US boundary lines
       map.current.addLayer({
         id: 'us-boundary-lines1',
         type: 'line',
@@ -154,8 +135,6 @@ function App() {
           'line-width': 0.8
         }
       });
-
-
 
       map.current.scrollZoom.enable();
       map.current.scrollZoom.setWheelZoomRate(3);
@@ -185,68 +164,66 @@ function App() {
     map.current.zoomTo(map.current.getZoom() - 1);
   };
 
-return (
-  <div className="App">
-    {/* Menu Bar */}
-    <header className="menu-bar">
-      <div className="logo">GIDEON</div>
-      <nav className="nav-links">
-        <a href="#">Explore</a>
-        <a href="#">Lab</a>
-        <a href="#">Diagnose</a>
-        <a href="#">Visualize</a>
-        <a href="#">Compare</a>
-        <a href="#">A-Z</a>
-        <a href="#">More</a>
-      </nav>
-      <div className="search-bar">
-        <input type="text" placeholder="Search..." />
+  return (
+    <div className="App">
+      {/* Menu Bar */}
+      <header className="menu-bar">
+        <div className="logo">GIDEON</div>
+        <nav className="nav-links">
+          <a href="#">Explore</a>
+          <a href="#">Lab</a>
+          <a href="#">Diagnose</a>
+          <a href="#">Visualize</a>
+          <a href="#">Compare</a>
+          <a href="#">A-Z</a>
+          <a href="#">More</a>
+        </nav>
+        <div className="search-bar">
+          <input type="text" placeholder="Search..." />
+        </div>
+      </header>
+
+      {/* Map Container */}
+      <div ref={mapContainer} className="map-container" />
+
+      {/* Controls */}
+      <div className="zoom-controls-left">
+        <button onClick={zoomIn}>＋</button>
+        <button onClick={zoomOut}>−</button>
       </div>
-    </header>
 
-    {/* Map Container */}
-    <div ref={mapContainer} className="map-container" />
+      <div className="zoom-controls-right">
+        <button onClick={toggleElevation}>
+          {elevationVisible ? 'Hide Elevation' : 'Show Elevation'}
+        </button>
+      </div>
 
-    {/* Controls */}
-  <div className="zoom-controls-left">
-    <button onClick={zoomIn}>＋</button>
-    <button onClick={zoomOut}>−</button>
-  </div>
+      {/* Legend */}
+      <div className="map-legend">
+        <h4>Malaria Risk Levels</h4>
+        <div><span className="legend-color" style={{ background: '#ff0000' }}></span> High Risk</div>
+        <div><span className="legend-color" style={{ background: '#ffa500' }}></span> Moderate Risk</div>
+        <div><span className="legend-color" style={{ background: '#ffff00' }}></span> Low Risk</div>
+        <div><span className="legend-color" style={{ background: '#00ff00' }}></span> No Known Risk</div>
+        <h4>Elevation (m)</h4>
+        <div><span className="legend-color" style={{ background: '#ff0000' }}></span> Below 750</div>
+        <div><span className="legend-color" style={{ background: '#ffff00' }}></span> 750 - 1500</div>
+        <div><span className="legend-color" style={{ background: '#ffa500' }}></span> 1500 - 2250</div>
+        <div><span className="legend-color" style={{ background: '#00ff00' }}></span> Above 2250</div>
+      </div>
 
-  <div className="zoom-controls-right">
-    <button onClick={toggleElevation}>
-      {elevationVisible ? 'Hide Elevation' : 'Show Elevation'}
-    </button>
-  </div>
-
-
-    {/* Legend */}
-    <div className="map-legend">
-      <h4>Malaria Risk Levels</h4>
-      <div><span className="legend-color" style={{ background: '#ff0000' }}></span> High Risk</div>
-      <div><span className="legend-color" style={{ background: '#ffa500' }}></span> Moderate Risk</div>
-      <div><span className="legend-color" style={{ background: '#ffff00' }}></span> Low Risk</div>
-      <div><span className="legend-color" style={{ background: '#00ff00' }}></span> No Known Risk</div>
-      <h4>Elevation (m)</h4>
-      <div><span className="legend-color" style={{ background: '#ff0000' }}></span> Below 1000</div>
-      <div><span className="legend-color" style={{ background: '#ffff00' }}></span> 1000 - 2000</div>
-      <div><span className="legend-color" style={{ background: '#ffa500' }}></span> 2000 - 3000</div>
-      <div><span className="legend-color" style={{ background: '#00ff00' }}></span> Above 3000</div>
+      {/* Footer */}
+      <footer className="footer">
+        <div>Copyright © 1994 - 2025 GIDEON Informatics, Inc. All Rights Reserved.</div>
+        <div className="footer-links">
+          <a href="#">Site Map</a>
+          <a href="#">Help</a>
+          <a href="#">License Agreement</a>
+          <a href="#">Get in touch</a>
+        </div>
+      </footer>
     </div>
-
-    {/* Footer */}
-    <footer className="footer">
-      <div>Copyright © 1994 - 2025 GIDEON Informatics, Inc. All Rights Reserved.</div>
-      <div className="footer-links">
-        <a href="#">Site Map</a>
-        <a href="#">Help</a>
-        <a href="#">License Agreement</a>
-        <a href="#">Get in touch</a>
-      </div>
-    </footer>
-  </div>
-);
-
+  );
 }
 
 export default App;
