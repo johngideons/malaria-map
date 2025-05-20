@@ -1,13 +1,21 @@
-.map-container {
-  height: 100vh;
-  width: 100%;
+.App {
   position: relative;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+.map-container {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 100%;
 }
 
 .zoom-controls {
   position: absolute;
-  top: 20px;
-  left: 20px;
+  top: 10px;
+  left: 10px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -15,34 +23,35 @@
 }
 
 .zoom-controls button {
-  background-color: white;
-  border: 1px solid #ccc;
-  padding: 10px 14px;
+  background-color: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 8px;
+  padding: 12px 18px;
   font-size: 20px;
   cursor: pointer;
-  border-radius: 4px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  transition: transform 0.2s ease;
 }
 
 .zoom-controls button:hover {
-  background-color: #eee;
+  transform: scale(1.05);
 }
 
 .map-legend {
   position: absolute;
-  bottom: 20px;
-  right: 20px;
-  background: rgba(255, 255, 255, 0.9);
-  padding: 10px 12px;
-  border-radius: 6px;
+  bottom: 10px;
+  left: 10px;
+  background-color: rgba(255, 255, 255, 0.95);
+  padding: 12px 16px;
+  border-radius: 10px;
   font-size: 14px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  max-width: 300px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
   z-index: 1;
 }
 
 .map-legend h4 {
-  margin: 0 0 8px;
-  font-weight: bold;
+  margin: 8px 0 4px;
 }
 
 .legend-color {
@@ -50,6 +59,37 @@
   width: 16px;
   height: 16px;
   margin-right: 6px;
-  border: 1px solid #888;
+  border-radius: 3px;
   vertical-align: middle;
+}
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+  .zoom-controls button {
+    padding: 10px 14px;
+    font-size: 18px;
+  }
+
+  .map-legend {
+    font-size: 12px;
+    padding: 10px 12px;
+    max-width: 90%;
+  }
+
+  .legend-color {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .zoom-controls button {
+    padding: 8px 12px;
+    font-size: 16px;
+  }
+
+  .map-legend {
+    font-size: 11px;
+    padding: 8px 10px;
+  }
 }
