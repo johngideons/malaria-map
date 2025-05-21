@@ -17,10 +17,13 @@ function App() {
       style: 'mapbox://styles/mapbox/light-v11',
       center: [-98, 39],
       zoom: 2,
+      pitch: 0,
+      bearing: 0,
+      projection: 'mercator'
     });
 
     map.current.on('load', () => {
-      // Admin boundaries and risk levels
+      // Add admin boundaries and risk levels
       map.current.addSource('admin-boundaries', {
         type: 'vector',
         url: 'mapbox://ksymes.2bolqz9e',
@@ -30,6 +33,26 @@ function App() {
         type: 'vector',
         url: 'mapbox://ksymes.2ticiwrd',
       });
+
+      // 1. Add the DEM source BEFORE setting terrain
+      map.current.addSource('mapbox-dem', {
+        type: 'raster-dem',
+        url: 'mapbox://mapbox.terrain-rgb',
+        tileSize: 512,
+        maxzoom: 14
+      });
+
+      // 2. Optionally add hillshade layer
+      map.current.addLayer({
+        id: 'hillshading',
+        source: 'mapbox-dem',
+        type: 'hillshade',
+        layout: {},
+        paint: {}
+      });
+
+      // 3. Enable 3D terrain with optional exaggeration
+      map.current.setTerrain({ source: 'mapbox-dem', exaggeration: 1.5 });
 
       map.current.addLayer({
         id: 'adm0-risk',
@@ -87,14 +110,14 @@ function App() {
         type: 'raster',
         source: 'ee-dem',
         layout: { visibility: 'none' },
-        paint: {'fill-opacity': 0.2}
+        paint: { 'raster-opacity': 0.2 }
       });
 
       // Admin Level 2 raster boundaries (new layer)
       map.current.addSource('admin3-boundaries', {
         type: 'raster',
         tiles: [
-          'https://earthengine.googleapis.com/v1/projects/ee-jsaita47/maps/5fff165bf2d96bafa5109889d958cf11-f9f2ee5df91b80d53be0f58517a110fb/tiles/{z}/{x}/{y}' // Replace with actual tile URL
+          'https://earthengine.googleapis.com/v1/projects/ee-jsaita47/maps/5fff165bf2d96bafa5109889d958cf11-f9f2ee5df91b80d53be0f58517a110fb/tiles/{z}/{x}/{y}'
         ],
         tileSize: 256
       });
@@ -106,7 +129,7 @@ function App() {
         minzoom: 6,
         maxzoom: 24,
         layout: { visibility: 'visible' },
-        paint: {'fill-opacity': 0.4}
+        paint: { 'raster-opacity': 0.4 }
       });
 
       // US boundary lines
