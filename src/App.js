@@ -23,6 +23,7 @@ function App() {
     });
 
     map.current.on('load', () => {
+      
       // Add admin boundaries and risk levels
       map.current.addSource('admin-boundaries', {
         type: 'vector',
@@ -33,26 +34,6 @@ function App() {
         type: 'vector',
         url: 'mapbox://ksymes.2ticiwrd',
       });
-
-      // 1. Add the DEM source BEFORE setting terrain
-      map.current.addSource('mapbox-dem', {
-        type: 'raster-dem',
-        url: 'mapbox://mapbox.terrain-rgb',
-        tileSize: 512,
-        maxzoom: 14
-      });
-
-      // 2. Optionally add hillshade layer
-      map.current.addLayer({
-        id: 'hillshading',
-        source: 'mapbox-dem',
-        type: 'hillshade',
-        layout: {},
-        paint: {}
-      });
-
-      // 3. Enable 3D terrain with optional exaggeration
-      map.current.setTerrain({ source: 'mapbox-dem', exaggeration: 1.5 });
 
       map.current.addLayer({
         id: 'adm0-risk',
@@ -96,25 +77,8 @@ function App() {
         }
       });
 
-      // GEE Elevation Raster Layer
-      map.current.addSource('ee-dem', {
-        type: 'raster',
-        tiles: [
-          'https://earthengine.googleapis.com/v1/projects/ee-jsaita47/maps/bfbb261a1c4bca8b3b718354d853db69-a1db5078f70e08ee64e84c6fc6388bae/tiles/{z}/{x}/{y}'
-        ],
-        tileSize: 256
-      });
-
-      map.current.addLayer({
-        id: 'ee-dem',
-        type: 'raster',
-        source: 'ee-dem',
-        layout: { visibility: 'none' },
-        paint: { 'raster-opacity': 0.2 }
-      });
-
       // Admin Level 2 raster boundaries (new layer)
-      map.current.addSource('admin3-boundaries', {
+      map.current.addSource('admin2-boundaries', {
         type: 'raster',
         tiles: [
           'https://earthengine.googleapis.com/v1/projects/ee-jsaita47/maps/5fff165bf2d96bafa5109889d958cf11-f9f2ee5df91b80d53be0f58517a110fb/tiles/{z}/{x}/{y}'
@@ -123,10 +87,28 @@ function App() {
       });
 
       map.current.addLayer({
-        id: 'admin3-boundaries-layer',
+        id: 'admin2-boundaries-layer',
         type: 'raster',
-        source: 'admin3-boundaries',
+        source: 'admin2-boundaries',
         minzoom: 6,
+        maxzoom: 9,
+        layout: { visibility: 'visible' },
+        paint: { 'raster-opacity': 0.4 }
+      });
+         // Admin Level 2 elevation
+        map.current.addSource('admin2-elevation', {
+        type: 'raster',
+        tiles: [
+          'https://earthengine.googleapis.com/v1/projects/ee-jsaita47/maps/dca7fd1d239160adf5cbcdd43957f4b7-23d264e33d85a94946e276e3388af2aa/tiles/{z}/{x}/{y}'
+        ],
+        tileSize: 256
+      });
+
+      map.current.addLayer({
+        id: 'admin2-elevation-layer',
+        type: 'raster',
+        source: 'admin2-elevation',
+        minzoom: 9,
         maxzoom: 24,
         layout: { visibility: 'visible' },
         paint: { 'raster-opacity': 0.4 }
