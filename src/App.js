@@ -197,12 +197,6 @@ function App() {
         <button onClick={zoomOut}>−</button>
       </div>
 
-      <div className="zoom-controls-right">
-        <button onClick={toggleElevation}>
-          {elevationVisible ? 'Hide Elevation' : 'Show Elevation'}
-        </button>
-      </div>
-
       {/* Legend */}
       <div className="map-legend">
         <h4>Malaria Risk Levels</h4>
