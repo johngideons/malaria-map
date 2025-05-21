@@ -210,8 +210,6 @@ function App() {
         <div><span className="legend-color" style={{ background: '#ffa500' }}></span> Moderate Risk</div>
         <div><span className="legend-color" style={{ background: '#ffff00' }}></span> Low Risk</div>
         <div><span className="legend-color" style={{ background: '#00ff00' }}></span> No Known Risk</div>
-        <h4>Elevation (m)</h4>
-        <div><span className="legend-color" style={{ background: '#ff0000' }}></span> High Risk 0-100</div>
       </div>
 
       {/* Footer */}
