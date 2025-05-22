@@ -81,7 +81,7 @@ function App() {
       map.current.addSource('admin2-boundaries', {
         type: 'raster',
         tiles: [
-          'https://earthengine.googleapis.com/v1/projects/ee-jsaita47/maps/5fff165bf2d96bafa5109889d958cf11-f9f2ee5df91b80d53be0f58517a110fb/tiles/{z}/{x}/{y}'
+          'https://earthengine.googleapis.com/v1/projects/ee-jsaita47/maps/b9ce81c3c702cd4136883a668f32a02d-a317161130509adfcb92a080f484f4d7/tiles/{z}/{x}/{y}'
         ],
         tileSize: 256
       });
@@ -93,13 +93,13 @@ function App() {
         minzoom: 6,
         maxzoom: 9,
         layout: { visibility: 'visible' },
-        paint: { 'raster-opacity': 0.4 }
+        paint: { 'raster-opacity': 0.6 }
       });
          // Admin Level 2 elevation
         map.current.addSource('admin2-elevation', {
         type: 'raster',
         tiles: [
-          'https://earthengine.googleapis.com/v1/projects/ee-jsaita47/maps/dca7fd1d239160adf5cbcdd43957f4b7-23d264e33d85a94946e276e3388af2aa/tiles/{z}/{x}/{y}'
+          'https://earthengine.googleapis.com/v1/projects/ee-jsaita47/maps/fd4dd90c97236f0ba7c7caf6dec6c192-e611774b637d71c32f3b310b54510804/tiles/{z}/{x}/{y}'
         ],
         tileSize: 256
       });
@@ -111,7 +111,7 @@ function App() {
         minzoom: 9,
         maxzoom: 24,
         layout: { visibility: 'visible' },
-        paint: { 'raster-opacity': 0.4 }
+        paint: { 'raster-opacity': 0.6 }
       });
 
       // US boundary lines
@@ -175,12 +175,12 @@ function App() {
       <header className="menu-bar">
         <div className="logo">GIDEON</div>
         <nav className="nav-links">
-          <a href="#">Explore</a>
-          <a href="#">Lab</a>
-          <a href="#">Diagnose</a>
-          <a href="#">Visualize</a>
-          <a href="#">Compare</a>
-          <a href="#">A-Z</a>
+          <a href="https://app.gideononline.com/explore">Explore</a>
+          <a href="https://app.gideononline.com/lab">Lab</a>
+          <a href="https://app.gideononline.com/diagnose">Diagnose</a>
+          <a href="https://app.gideononline.com/visualize">Visualize</a>
+          <a href="https://app.gideononline.com/compare">Compare</a>
+          <a href="https://app.gideononline.com/az">A-Z</a>
           <a href="#">More</a>
         </nav>
         <div className="search-bar">
@@ -210,10 +210,10 @@ function App() {
       <footer className="footer">
         <div>Copyright © 1994 - 2025 GIDEON Informatics, Inc. All Rights Reserved.</div>
         <div className="footer-links">
-          <a href="#">Site Map</a>
-          <a href="#">Help</a>
-          <a href="#">License Agreement</a>
-          <a href="#">Get in touch</a>
+          <a href="https://app.gideononline.com/sitemap">Site Map</a>
+          <a href="https://learn.gideononline.com/help">Help</a>
+          <a href="https://app.gideononline.com/explore/diseases/meningitis-bacterial-11480/china-G140#">License Agreement</a>
+          <a href="https://www.gideononline.com/contact">Get in touch</a>
         </div>
       </footer>
     </div>
