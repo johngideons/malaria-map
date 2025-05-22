@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef} from 'react';
 import mapboxgl from 'mapbox-gl';
 import './App.css';
 
@@ -7,8 +7,6 @@ mapboxgl.accessToken = process.env.REACT_APP_MAPBOX_TOKEN;
 function App() {
   const mapContainer = useRef(null);
   const map = useRef(null);
-  const [elevationVisible, setElevationVisible] = useState(false);
-
   useEffect(() => {
     if (map.current) return;
 
@@ -147,23 +145,10 @@ function App() {
     });
   }, []);
 
-  const toggleElevation = () => {
-    if (!map.current) return;
-    const visibility = map.current.getLayoutProperty('ee-dem', 'visibility');
-    if (visibility === 'visible') {
-      map.current.setLayoutProperty('ee-dem', 'visibility', 'none');
-      setElevationVisible(false);
-    } else {
-      map.current.setLayoutProperty('ee-dem', 'visibility', 'visible');
-      setElevationVisible(true);
-    }
-  };
-
   const zoomIn = () => {
     if (!map.current) return;
     map.current.zoomTo(map.current.getZoom() + 1);
   };
-
   const zoomOut = () => {
     if (!map.current) return;
     map.current.zoomTo(map.current.getZoom() - 1);
