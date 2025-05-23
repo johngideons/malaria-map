@@ -32,7 +32,8 @@ function App() {
         type: 'vector',
         url: 'mapbox://ksymes.2ticiwrd',
       });
-
+      
+      
       map.current.addLayer({
         id: 'adm0-risk',
         type: 'fill',
@@ -43,7 +44,7 @@ function App() {
         paint: {
           'fill-color': [
             'match',
-            ['get', 'MALARIA_RISK'],
+            ['get', 'risk_level'],
             '4', '#ff0000',
             '3', '#ffa500',
             '2', '#ffff00',
