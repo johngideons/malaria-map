@@ -22,38 +22,144 @@ function App() {
 
     map.current.on('load', () => {
       
-      // Add admin boundaries and risk levels
-      map.current.addSource('admin-boundaries', {
-        type: 'vector',
-        url: 'mapbox://ksymes.2bolqz9e',
-      });
+      Promise.all([
+        fetch('/malaria-map/json/admin0.json').then(res => res.json()),
+        fetch('/malaria-map/json/admin1.json').then(res => res.json())
+      ]).then(([admin0Data, admin1Data]) => {
+        // Step 1: Build admin0 risk map (country-level)
+        const admin0RiskMap = {};
+        admin0Data.forEach(entry => {
+          admin0RiskMap[entry.ISO_2_DIGI] = entry.risk_level;
+        });
 
+        // Step 2: Build admin1 risk map (state-level)
+        const admin1RiskMap = {};
+        admin1Data.forEach(entry => {
+          admin1RiskMap[entry.ISO_3166_2] = entry.risk_level;
+        });
+
+        // ----------------------------------------
+        // Admin0 Layer (base map for all countries)
+        // ----------------------------------------
+
+        const admin0MatchExpression = ['match', ['get', 'ISO_A2']];
+        Object.entries(admin0RiskMap).forEach(([iso2, level]) => {
+          let color;
+          switch (level) {
+            case 4: color = '#ff0000'; break;
+            case 3: color = '#ffa500'; break;
+            case 2: color = '#ffff00'; break;
+            case 1: color = '#00ff00'; break;
+            default: color = '#cccccc';
+          }
+          admin0MatchExpression.push(iso2, color);
+        });
+        admin0MatchExpression.push('#cccccc');
+
+        map.current.addSource('admin0', {
+          type: 'vector',
+          url: 'mapbox://ksymes.2r1963to',
+        });
+
+        map.current.addLayer({
+          id: 'adm0-risk',
+          type: 'fill',
+          source: 'admin0',
+          'source-layer': 'ne_10m_admin_0_map_units-10f1rr',
+          minzoom: 0,
+          maxzoom: 6,
+          paint: {
+            'fill-color': admin0MatchExpression,
+            'fill-opacity': 0.6
+          }
+        });
+
+        map.current.addLayer({
+          id: 'admin-boundary-lines0',
+          type: 'line',
+          source: 'admin0',
+          'source-layer': 'ne_10m_admin_0_map_units-10f1rr',
+          minzoom: 0,
+          maxzoom: 3,
+          paint: {
+            'line-color': '#5A5A5A',
+            'line-width': 0.5
+          }
+        });
+
+        // ----------------------------------------
+        // Admin1 Layer (drawn over admin0)
+        // Only for regions that exist in admin1 JSON
+        // ----------------------------------------
+
+        const admin1MatchExpression = ['match', ['get', 'iso_3166_2']];
+        Object.entries(admin1RiskMap).forEach(([isoCode, level]) => {
+          let color;
+          switch (level) {
+            case 4: color = '#ff0000'; break;
+            case 3: color = '#ffa500'; break;
+            case 2: color = '#ffff00'; break;
+            case 1: color = '#00ff00'; break;
+            default: color = '#cccccc';
+          }
+          admin1MatchExpression.push(isoCode, color);
+        });
+        admin1MatchExpression.push('transparent'); // hide unmatched regions so admin0 shows
+
+        map.current.addSource('admin1', {
+          type: 'vector',
+          url: 'mapbox://ksymes.0idmwc9i',
+        });
+
+        map.current.addLayer({
+          id: 'adm1-risk',
+          type: 'fill',
+          source: 'admin1',
+          'source-layer': 'ne_10m_admin_1_states_provinc-8jcdng',
+          minzoom: 3,
+          maxzoom: 6,
+          paint: {
+            'fill-color': admin1MatchExpression,
+            'fill-opacity': 0.6
+          }
+        });
+
+        map.current.addLayer({
+          id: 'admin-boundary-lines1',
+          type: 'line',
+          source: 'admin1',
+          'source-layer': 'ne_10m_admin_1_states_provinc-8jcdng',
+          minzoom: 3,
+          maxzoom: 6,
+          paint: {
+            'line-color': '#5A5A5A',
+            'line-width': 0.5
+          }
+        });
+                map.current.addLayer({
+          id: 'admin-boundary-lines0_1',
+          type: 'line',
+          source: 'admin0',
+          'source-layer': 'ne_10m_admin_0_map_units-10f1rr',
+          minzoom: 3,
+          maxzoom: 6,
+          paint: {
+            'line-color': '#FF0000',
+            'line-width': 0.5
+          }
+        });
+
+      });
+      //------------------------------------------------------
+
+            
       map.current.addSource('us-admin1', {
         type: 'vector',
         url: 'mapbox://ksymes.2ticiwrd',
       });
       
       
-      map.current.addLayer({
-        id: 'adm0-risk',
-        type: 'fill',
-        source: 'admin-boundaries',
-        'source-layer': 'ADM0-6f4iy3',
-        minzoom: 0,
-        maxzoom: 3,
-        paint: {
-          'fill-color': [
-            'match',
-            ['get', 'risk_level'],
-            '4', '#ff0000',
-            '3', '#ffa500',
-            '2', '#ffff00',
-            '1', '#00ff00',
-            '#cccccc'
-          ],
-          'fill-opacity': 0.6
-        }
-      });
+
 
       map.current.addLayer({
         id: 'us-admin1-risk',
@@ -94,6 +200,7 @@ function App() {
         layout: { visibility: 'visible' },
         paint: { 'raster-opacity': 0.6 }
       });
+
          // Admin Level 2 elevation
         map.current.addSource('admin2-elevation', {
         type: 'raster',
@@ -113,19 +220,7 @@ function App() {
         paint: { 'raster-opacity': 0.6 }
       });
 
-      // US boundary lines
-      map.current.addLayer({
-        id: 'us-boundary-lines0',
-        type: 'line',
-        source: 'admin-boundaries',
-        'source-layer': 'ADM0-6f4iy3',
-        minzoom: 0,
-        maxzoom: 3,
-        paint: {
-          'line-color': '#5A5A5A',
-          'line-width': 0.5
-        }
-      });
+
 
       map.current.addLayer({
         id: 'us-boundary-lines1',
@@ -144,6 +239,7 @@ function App() {
       map.current.scrollZoom.setWheelZoomRate(3);
       map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
     });
+  
   }, []);
 
   const zoomIn = () => {
@@ -153,6 +249,7 @@ function App() {
   const zoomOut = () => {
     if (!map.current) return;
     map.current.zoomTo(map.current.getZoom() - 1);
+    
   };
 
   return (
