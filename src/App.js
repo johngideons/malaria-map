@@ -75,20 +75,6 @@ function App() {
         url: 'mapbox://ksymes.2r1963to'
       });
 
-      map.current.addLayer({
-        id: 'adm0-risk',
-        type: 'fill',
-        source: 'admin0',
-        'source-layer': 'ne_10m_admin_0_map_units-10f1rr',
-        minzoom: 0,
-        maxzoom: 3,
-        paint: {
-          'fill-color': admin0Expression,
-          'fill-opacity': 0.6
-        }
-      });
-      
-
       // -------------------
       // Admin1 Expression (fallback to admin0)
       // -------------------
@@ -108,8 +94,8 @@ function App() {
         type: 'fill',
         source: 'admin1',
         'source-layer': 'layer_name',
-        minzoom: 3,
-        maxzoom: 6,
+        minzoom: 0,
+        maxzoom: 24,
         paint: {
           'fill-color': [
             'case',
@@ -146,7 +132,7 @@ function App() {
         type: 'fill',
         source: 'admin2',
         'source-layer': 'admin2',
-        minzoom: 6,
+        minzoom: 10,
         maxzoom: 24,
         paint: {
           'fill-color': [
