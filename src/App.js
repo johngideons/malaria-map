@@ -13,7 +13,7 @@ function App() {
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11',
+      style: 'mapbox://styles/ksymes/ckcxhru700vpw1is0jx79xl16',
       center: [-98, 39],
       zoom: 2,
       pitch: 0,
@@ -75,6 +75,9 @@ function App() {
         url: 'mapbox://ksymes.2r1963to'
       });
 
+
+      
+
       // -------------------
       // Admin1 Expression (fallback to admin0)
       // -------------------
@@ -132,7 +135,7 @@ function App() {
         type: 'fill',
         source: 'admin2',
         'source-layer': 'admin2',
-        minzoom: 10,
+        minzoom: 6,
         maxzoom: 24,
         paint: {
           'fill-color': [
@@ -152,7 +155,7 @@ function App() {
               '#00ff00'
             ]
           ],
-          'fill-opacity': 0.6
+          'fill-opacity': 0.7
         }
       });
 
