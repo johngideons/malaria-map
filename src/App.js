@@ -25,6 +25,27 @@ function App() {
       const response = await fetch('/malaria-map/json/csvjson.json');
       const data = await response.json();
 
+      // Add Earth Engine elevation mask tile as raster
+      map.current.addSource('ee-elevation-mask', {
+        type: 'raster',
+        tiles: [
+          'https://earthengine.googleapis.com/v1/projects/ee-jsaita47/maps/d6b52ec480c601c00d35bd40bec3135b-09d3592265a9be107451b14a46958dde/tiles/{z}/{x}/{y}'
+        ],
+        tileSize: 256
+      });
+
+      map.current.addLayer({
+        id: 'ee-elevation-layer',
+        type: 'raster',
+        source: 'ee-elevation-mask',
+        minzoom: 0,
+        maxzoom: 24,
+        paint: {
+          'raster-opacity': 1
+        }
+      }, null); // Insert on top of everything initially
+
+      
       const admin0RiskMap = {};
       const admin1RiskMap = {};
       const admin2RiskMap = {};
@@ -74,9 +95,6 @@ function App() {
         type: 'vector',
         url: 'mapbox://ksymes.2r1963to'
       });
-
-
-      
 
       // -------------------
       // Admin1 Expression (fallback to admin0)
