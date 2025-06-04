@@ -16,7 +16,7 @@ function App() {
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/ksymes/ckcxhru700vpw1is0jx79xl16',
-      center: [20, 5], // Center on Africa
+      center: [20, 5],
       zoom: 2.5,
       pitch: 0,
       bearing: 0,
@@ -45,10 +45,10 @@ function App() {
 
       const getColor = level => {
         switch (level) {
-          case 4: return '#ff0000'; // High
-          case 3: return '#ffa500'; // Moderate
-          case 2: return '#ffff00'; // Low
-          case 1: return '#00ff00'; // No known risk
+          case 4: return '#ff0000';
+          case 3: return '#ffa500';
+          case 2: return '#ffff00';
+          case 1: return '#00ff00';
           default: return null;
         }
       };
@@ -68,7 +68,8 @@ function App() {
             ['match', ['get', 'GID_0'], ...Object.entries(admin0RiskMap).flatMap(([gid0, level]) => [gid0, getColor(level)]), '#00ff00']
           ],
           'fill-opacity': 0.6
-        }
+        },
+        layout: { visibility: 'visible' }
       });
 
       map.current.addLayer({
@@ -84,7 +85,8 @@ function App() {
             ['match', ['get', 'GID_0'], ...Object.entries(admin0RiskMap).flatMap(([gid0, level]) => [gid0, getColor(level)]), '#00ff00']
           ],
           'fill-opacity': 0.7
-        }
+        },
+        layout: { visibility: 'visible' }
       });
 
       map.current.addSource('ee-elevation-mask', {
@@ -92,14 +94,48 @@ function App() {
         tiles: ['https://earthengine.googleapis.com/v1/projects/ee-jsaita47/maps/8c25a3d16dc84e43a5fb2a9631bce5fb-d835cb2499e5d718f3b4a17597b3adb2/tiles/{z}/{x}/{y}'],
         tileSize: 256
       });
-      map.current.addLayer({ id: 'ee-elevation-layer', type: 'raster', source: 'ee-elevation-mask', minzoom: 0, maxzoom: 24, paint: { 'raster-opacity': 1 } });
+      map.current.addLayer({
+        id: 'ee-elevation-layer', type: 'raster', source: 'ee-elevation-mask',
+        minzoom: 0, maxzoom: 24,
+        paint: { 'raster-opacity': 1 },
+        layout: { visibility: 'visible' }
+      });
 
       map.current.addSource('elevation-mask', {
         type: 'raster',
         tiles: ['https://earthengine.googleapis.com/v1/projects/ee-jsaita47/maps/3dda07fa64625e86bff5f57da8fe4aff-197c5fcef3b64302d2e54216a41750f1/tiles/{z}/{x}/{y}'],
         tileSize: 256
       });
-      map.current.addLayer({ id: 'elevation-layer', type: 'raster', source: 'elevation-mask', minzoom: 0, maxzoom: 24, paint: { 'raster-opacity': 0.6 }, layout: { visibility: 'none' } });
+      map.current.addLayer({
+        id: 'elevation-layer', type: 'raster', source: 'elevation-mask',
+        minzoom: 0, maxzoom: 24,
+        paint: { 'raster-opacity': 0.6 },
+        layout: { visibility: 'none' }
+      });
+
+      map.current.addSource('terrain-source', {
+        type: 'raster-dem',
+        url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
+        tileSize: 512,
+        maxzoom: 14
+      });
+
+      map.current.setTerrain({ source: 'terrain-source', exaggeration: 1.5 });
+
+      map.current.addSource('hillshade-source', {
+        type: 'raster-dem',
+        url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
+        tileSize: 512,
+        maxzoom: 14
+      });
+
+      map.current.addLayer({
+        id: 'hillshade-layer',
+        type: 'hillshade',
+        source: 'hillshade-source',
+        layout: { visibility: 'none' },
+        paint: { 'hillshade-exaggeration': 1 }
+      }, 'elevation-layer');
 
       map.current.addLayer({ id: 'adm2-boundary', type: 'line', source: 'admin2', 'source-layer': 'admin2', minzoom: 6, maxzoom: 24, paint: { 'line-color': '#FFFFFF', 'line-width': 0.5 } });
       map.current.addLayer({ id: 'adm1-boundary', type: 'line', source: 'admin1', 'source-layer': 'layer_name', minzoom: 3, maxzoom: 10, paint: { 'line-color': '#999', 'line-width': 0.5 } });
@@ -127,8 +163,17 @@ function App() {
         <button onClick={zoomOut}>−</button>
       </div>
 
-      <div className="map-legend">
-        {showElevationLegend ? (
+      <div className="map-legend scrollable-legend">
+        {showRiskLegend && (
+          <>
+            <h4>Malaria Risk Levels</h4>
+            <div><span className="legend-color" style={{ background: '#ff0000' }}></span> High Risk</div>
+            <div><span className="legend-color" style={{ background: '#ffa500' }}></span> Moderate Risk</div>
+            <div><span className="legend-color" style={{ background: '#ffff00' }}></span> Low Risk</div>
+            <div><span className="legend-color" style={{ background: '#00ff00' }}></span> No Known Risk</div>
+          </>
+        )}
+        {showElevationLegend && (
           <>
             <h4>Elevation Ranges (meters)</h4>
             <div><span className="legend-color" style={{ background: '#FF0000' }}></span> &lt; 500</div>
@@ -141,15 +186,7 @@ function App() {
             <div><span className="legend-color" style={{ background: '#007FFF' }}></span> 3500–4000</div>
             <div><span className="legend-color" style={{ background: '#0000FF' }}></span> &gt; 4000</div>
           </>
-        ) : showRiskLegend ? (
-          <>
-            <h4>Malaria Risk Levels</h4>
-            <div><span className="legend-color" style={{ background: '#ff0000' }}></span> High Risk</div>
-            <div><span className="legend-color" style={{ background: '#ffa500' }}></span> Moderate Risk</div>
-            <div><span className="legend-color" style={{ background: '#ffff00' }}></span> Low Risk</div>
-            <div><span className="legend-color" style={{ background: '#00ff00' }}></span> No Known Risk</div>
-          </>
-        ) : null}
+        )}
       </div>
 
       <div className="layers-panel">
@@ -170,9 +207,11 @@ function App() {
           <label>
             <input type="checkbox" onChange={(e) => {
               const visible = e.target.checked ? 'visible' : 'none';
-              if (map.current.getLayer('elevation-layer')) {
-                map.current.setLayoutProperty('elevation-layer', 'visibility', visible);
-              }
+              ['hillshade-layer', 'elevation-layer'].forEach(id => {
+                if (map.current.getLayer(id)) {
+                  map.current.setLayoutProperty(id, 'visibility', visible);
+                }
+              });
               setShowElevationLegend(e.target.checked);
             }} />
             Elevation
