@@ -23,29 +23,7 @@ function App() {
 
     map.current.on('load', async () => {
       const response = await fetch('/malaria-map/json/csvjson.json');
-      const data = await response.json();
-
-      // Add Earth Engine elevation mask tile as raster
-      map.current.addSource('ee-elevation-mask', {
-        type: 'raster',
-        tiles: [
-          'https://earthengine.googleapis.com/v1/projects/ee-jsaita47/maps/d6b52ec480c601c00d35bd40bec3135b-09d3592265a9be107451b14a46958dde/tiles/{z}/{x}/{y}'
-        ],
-        tileSize: 256
-      });
-
-      map.current.addLayer({
-        id: 'ee-elevation-layer',
-        type: 'raster',
-        source: 'ee-elevation-mask',
-        minzoom: 0,
-        maxzoom: 24,
-        paint: {
-          'raster-opacity': 1
-        }
-      }, null); // Insert on top of everything initially
-
-      
+      const data = await response.json();   
       const admin0RiskMap = {};
       const admin1RiskMap = {};
       const admin2RiskMap = {};
@@ -177,6 +155,26 @@ function App() {
         }
       });
 
+      // Add Earth Engine elevation mask tile as raster
+      map.current.addSource('ee-elevation-mask', {
+        type: 'raster',
+        tiles: [
+          'https://earthengine.googleapis.com/v1/projects/ee-jsaita47/maps/189fa85f9343575949e70d91aa0dd34e-32a89166f4f75d5e66d101f65ecb8b8a/tiles/{z}/{x}/{y}'
+        ],
+        tileSize: 256
+      });
+
+      map.current.addLayer({
+        id: 'ee-elevation-layer',
+        type: 'raster',
+        source: 'ee-elevation-mask',
+        minzoom: 0,
+        maxzoom: 24,
+        paint: {
+          'raster-opacity': 1
+        }
+      }, null); // Insert on top of everything initially
+      // 
       map.current.addLayer({
         id: 'adm2-boundary',
         type: 'line',
@@ -216,7 +214,9 @@ function App() {
           'line-width': 0.5
         }
     });
-    });
+    
+  
+  });
     
 
   }, []);
