@@ -159,7 +159,7 @@ function App() {
       map.current.addSource('ee-elevation-mask', {
         type: 'raster',
         tiles: [
-          'https://earthengine.googleapis.com/v1/projects/ee-jsaita47/maps/189fa85f9343575949e70d91aa0dd34e-32a89166f4f75d5e66d101f65ecb8b8a/tiles/{z}/{x}/{y}'
+          'https://earthengine.googleapis.com/v1/projects/ee-jsaita47/maps/8c25a3d16dc84e43a5fb2a9631bce5fb-d835cb2499e5d718f3b4a17597b3adb2/tiles/{z}/{x}/{y}'
         ],
         tileSize: 256
       });
