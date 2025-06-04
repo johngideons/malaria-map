@@ -218,3 +218,55 @@ body, html, .App {
     font-size: 14px;
   }
 }
+
+.layers-panel {
+  position: absolute;
+  top: 80px;
+  right: 10px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.layers-toggle-btn {
+  background: #1e88e5;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: background 0.3s ease;
+}
+
+.layers-toggle-btn:hover {
+  background: #1565c0;
+}
+
+.layers-dropdown {
+  margin-top: 8px;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 10px 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+  min-width: 140px;
+}
+
+.layers-dropdown.visible {
+  display: flex;
+}
+
+.layers-dropdown label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+
