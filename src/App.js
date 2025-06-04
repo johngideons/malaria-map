@@ -24,7 +24,7 @@ function App() {
     });
 
     map.current.on('load', async () => {
-      const response = await fetch('/malaria-map/json/csvjson.json');
+      const response = await fetch('/malaria-map/json/malaria_v3.json');
       const data = await response.json();
       const admin0RiskMap = {};
       const admin1RiskMap = {};
@@ -133,7 +133,7 @@ function App() {
         id: 'hillshade-layer',
         type: 'hillshade',
         source: 'hillshade-source',
-        layout: { visibility: 'none' },
+        layout: { visibility: 'visible' },
         paint: { 'hillshade-exaggeration': 1 }
       }, 'elevation-layer');
 
@@ -207,7 +207,7 @@ function App() {
           <label>
             <input type="checkbox" onChange={(e) => {
               const visible = e.target.checked ? 'visible' : 'none';
-              ['hillshade-layer', 'elevation-layer'].forEach(id => {
+              ['elevation-layer'].forEach(id => {
                 if (map.current.getLayer(id)) {
                   map.current.setLayoutProperty(id, 'visibility', visible);
                 }
