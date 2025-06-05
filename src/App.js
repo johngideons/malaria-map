@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import './App.css';
+import * as turf from '@turf/turf';
+
 
 mapboxgl.accessToken = process.env.REACT_APP_MAPBOX_TOKEN;
 
@@ -9,6 +11,42 @@ function App() {
   const map = useRef(null);
   const [showElevationLegend, setShowElevationLegend] = useState(false);
   const [showRiskLegend, setShowRiskLegend] = useState(true);
+
+  const [countryList, setCountryList] = useState([]);
+
+  const handleCountrySelect = (countryName) => {
+  if (!map.current) return;
+
+    // Step 1: Reset to initial zoom and center
+    map.current.easeTo({
+      center: [20, 5],
+      zoom: 2.5,
+      duration: 1000,
+      essential: true
+    });
+
+    // Step 2: After zoom reset completes, find and zoom to country
+    setTimeout(() => {
+      const features = map.current.querySourceFeatures('admin0', {
+        sourceLayer: 'ne_10m_admin_0_map_units-10f1rr',
+        filter: ['==', ['get', 'ADMIN'], countryName]
+      });
+
+      if (!features.length) {
+        alert(`Could not find boundary for "${countryName}"`);
+        return;
+      }
+
+      const bbox = turf.bbox(features[0]);
+      map.current.fitBounds(bbox, {
+        padding: 50,
+        duration: 1000,
+        essential: true
+      });
+    }, 1100); // Wait slightly longer than easeTo duration
+  };
+
+
 
   useEffect(() => {
     if (map.current) return;
@@ -56,6 +94,23 @@ function App() {
       map.current.addSource('admin0', { type: 'vector', url: 'mapbox://ksymes.2r1963to' });
       map.current.addSource('admin1', { type: 'vector', url: 'mapbox://ksymes.admin1' });
       map.current.addSource('admin2', { type: 'vector', url: 'mapbox://ksymes.admin2' });
+
+      setTimeout(async () => {
+        const features = await map.current.queryRenderedFeatures({
+          layers: [],
+        });
+
+        const admin0Features = map.current.querySourceFeatures('admin0', {
+          sourceLayer: 'ne_10m_admin_0_map_units-10f1rr'
+        });
+
+        const names = [
+          ...new Set(admin0Features.map(f => f.properties.ADMIN))
+        ].sort();
+
+        setCountryList(names);
+      }, 1000); // wait 1 second after load
+
 
       map.current.addLayer({
         id: 'adm1-risk', type: 'fill', source: 'admin1', 'source-layer': 'layer_name',
@@ -120,7 +175,6 @@ function App() {
         maxzoom: 14
       });
 
-      map.current.setTerrain({ source: 'terrain-source', exaggeration: 1.5 });
 
       map.current.addSource('hillshade-source', {
         type: 'raster-dem',
@@ -133,7 +187,7 @@ function App() {
         id: 'hillshade-layer',
         type: 'hillshade',
         source: 'hillshade-source',
-        layout: { visibility: 'visible' },
+        layout: { visibility: 'none' },
         paint: { 'hillshade-exaggeration': 1 }
       }, 'elevation-layer');
 
@@ -188,34 +242,114 @@ function App() {
           </>
         )}
       </div>
+      <div className="country-select-panel">
+        <button className="country-toggle-btn" onClick={() => {
+          const dropdown = document.querySelector('.country-dropdown');
+          dropdown.classList.toggle('visible');
+        }}>
+          Select Country ▼
+        </button>
+        <div className="country-dropdown scrollable-legend">
+          {countryList.map((country) => (
+            <div key={country} onClick={() => handleCountrySelect(country)}>
+              {country}
+            </div>
+          ))}
+        </div>
+      </div>
 
       <div className="layers-panel">
         <button className="layers-toggle-btn" onClick={() => document.querySelector('.layers-dropdown').classList.toggle('visible')}>Layers</button>
         <div className="layers-dropdown">
           <label>
-            <input type="checkbox" defaultChecked onChange={(e) => {
-              const visible = e.target.checked ? 'visible' : 'none';
-              ['adm1-risk', 'adm2-risk', 'ee-elevation-layer'].forEach(id => {
-                if (map.current.getLayer(id)) {
-                  map.current.setLayoutProperty(id, 'visibility', visible);
+            <input
+              id="risk-map-checkbox"
+              type="checkbox"
+              checked={showRiskLegend}
+              onChange={(e) => {
+                const isChecked = e.target.checked;
+
+                ['adm1-risk', 'adm2-risk', 'ee-elevation-layer'].forEach(id => {
+                  if (map.current.getLayer(id)) {
+                    map.current.setLayoutProperty(id, 'visibility', isChecked ? 'visible' : 'none');
+                  }
+                });
+
+                setShowRiskLegend(isChecked);
+
+                // Turn OFF Elevation if Risk Map is ON
+                if (isChecked) {
+                  if (map.current.getLayer('elevation-layer')) {
+                    map.current.setLayoutProperty('elevation-layer', 'visibility', 'none');
+                  }
+                  setShowElevationLegend(false);
+
+                  // Uncheck the elevation checkbox in DOM
+                  const elevationCheckbox = document.querySelector('#elevation-checkbox');
+                  if (elevationCheckbox) elevationCheckbox.checked = false;
                 }
-              });
-              setShowRiskLegend(e.target.checked);
-            }} />
+              }}
+            />
             Risk Map
           </label>
+
           <label>
-            <input type="checkbox" onChange={(e) => {
-              const visible = e.target.checked ? 'visible' : 'none';
-              ['elevation-layer'].forEach(id => {
-                if (map.current.getLayer(id)) {
-                  map.current.setLayoutProperty(id, 'visibility', visible);
+            <input
+              type="checkbox"
+              checked={showElevationLegend}
+              onChange={(e) => {
+                const isChecked = e.target.checked;
+
+                // Toggle Elevation layer
+                if (map.current.getLayer('elevation-layer')) {
+                  map.current.setLayoutProperty('elevation-layer', 'visibility', isChecked ? 'visible' : 'none');
                 }
-              });
-              setShowElevationLegend(e.target.checked);
-            }} />
+
+                setShowElevationLegend(isChecked);
+
+                // Turn OFF risk layers if Elevation is ON
+                if (isChecked) {
+                  ['adm1-risk', 'adm2-risk', 'ee-elevation-layer'].forEach(id => {
+                    if (map.current.getLayer(id)) {
+                      map.current.setLayoutProperty(id, 'visibility', 'none');
+                    }
+                  });
+                  setShowRiskLegend(false);
+
+                  // Also uncheck the Risk checkbox in DOM
+                  const riskCheckbox = document.querySelector('#risk-map-checkbox');
+                  if (riskCheckbox) riskCheckbox.checked = false;
+                }
+              }}
+            />
             Elevation
           </label>
+
+          <label>
+            <input
+              type="checkbox"
+              onChange={(e) => {
+                const enabled = e.target.checked;
+
+                if (map.current) {
+                  // Toggle terrain elevation surface
+                  if (enabled) {
+                    map.current.setTerrain({ source: 'terrain-source', exaggeration: 1.5 });
+                  } else {
+                    map.current.setTerrain(null);
+                  }
+
+                  // Toggle hillshade visibility
+                  if (map.current.getLayer('hillshade-layer')) {
+                    map.current.setLayoutProperty('hillshade-layer', 'visibility', enabled ? 'visible' : 'none');
+                  }
+                }
+              }}
+            />
+            Terrain
+          </label>
+
+
         </div>
       </div>
 
