@@ -3,7 +3,6 @@ import mapboxgl from 'mapbox-gl';
 import './App.css';
 import * as turf from '@turf/turf';
 
-
 mapboxgl.accessToken = process.env.REACT_APP_MAPBOX_TOKEN;
 
 function App() {
@@ -11,41 +10,60 @@ function App() {
   const map = useRef(null);
   const [showElevationLegend, setShowElevationLegend] = useState(false);
   const [showRiskLegend, setShowRiskLegend] = useState(true);
-
   const [countryList, setCountryList] = useState([]);
+  const [countryLookup, setCountryLookup] = useState({}); // map name -> {iso, latitude, longitude}
+  const [selectedCountry, setSelectedCountry] = useState(null);
 
   const handleCountrySelect = (countryName) => {
-  if (!map.current) return;
+    if (!map.current) return;
 
-    // Step 1: Reset to initial zoom and center
+    if (countryName === 'All Countries') {
+      setSelectedCountry(null);
+      map.current.easeTo({
+        center: [20, 5],
+        zoom: 2,
+        duration: 1000,
+        essential: true
+      });
+      return;
+    }
+    setSelectedCountry(countryName);
+    const { iso, latitude, longitude } = countryLookup[countryName];
+
+    // Zoom out then fly to lat/lon
     map.current.easeTo({
-      zoom: 2.5,
+      zoom: 0,
       duration: 1000,
       essential: true
     });
 
-    // Step 2: After zoom reset completes, find and zoom to country
     setTimeout(() => {
-      const features = map.current.querySourceFeatures('admin0', {
-        sourceLayer: 'ne_10m_admin_0_map_units-10f1rr',
-        filter: ['==', ['get', 'ADMIN'], countryName]
-      });
-
-      if (!features.length) {
-        alert(`Could not find boundary for "${countryName}"`);
-        return;
-      }
-
-      const bbox = turf.bbox(features[0]);
-      map.current.fitBounds(bbox, {
-        padding: 50,
-        duration: 1000,
+      map.current.flyTo({
+        center: [longitude, latitude],
+        zoom: 5,
+        speed: 1.2,
         essential: true
       });
-    }, 1100); // Wait slightly longer than easeTo duration
+
+      // After flying to center, fit bounds using boundary feature
+      setTimeout(() => {
+        const features = map.current.querySourceFeatures('admin0', {
+          sourceLayer: 'ne_10m_admin_0_map_units-10f1rr',
+          filter: ['==', ['get', 'ISO_A2'], iso]
+        });
+
+        if (!features.length) {
+          return;
+        }
+        const bbox = turf.bbox(features[0]);
+        map.current.fitBounds(bbox, {
+          padding: 50,
+          duration: 1000,
+          essential: true
+        });
+      }, 1000);
+    }, 1100);
   };
-
-
 
   useEffect(() => {
     if (map.current) return;
@@ -54,13 +72,29 @@ function App() {
       container: mapContainer.current,
       style: 'mapbox://styles/ksymes/ckcxhru700vpw1is0jx79xl16',
       center: [20, 5],
-      zoom: 2.5,
+      zoom: 2,
       pitch: 0,
       bearing: 0,
       projection: 'mercator'
     });
 
     map.current.on('load', async () => {
+      // Fetch admin0.json to populate dropdown and lookup
+      const admin0Response = await fetch('/malaria-map/json/admin0.json');
+      const admin0Data = await admin0Response.json();
+      const lookup = {};
+      admin0Data.forEach(entry => {
+        lookup[entry.name] = {
+          iso: entry.country,
+          latitude: entry.latitude,
+          longitude: entry.longitude
+        };
+      });
+      const uniqueNames = Object.keys(lookup).sort();
+      setCountryLookup(lookup);
+      setCountryList(['All Countries', ...uniqueNames]);
+
+      // Malaria data processing
       const response = await fetch('/malaria-map/json/malaria_v3.json');
       const data = await response.json();
       const admin0RiskMap = {};
@@ -80,7 +114,7 @@ function App() {
         }
       });
 
-      const getColor = level => {
+      const getColor = (level) => {
         switch (level) {
           case 4: return '#ff0000';
           case 3: return '#ffa500';
@@ -90,30 +124,19 @@ function App() {
         }
       };
 
+      // Add vector sources
       map.current.addSource('admin0', { type: 'vector', url: 'mapbox://ksymes.2r1963to' });
       map.current.addSource('admin1', { type: 'vector', url: 'mapbox://ksymes.admin1' });
       map.current.addSource('admin2', { type: 'vector', url: 'mapbox://ksymes.admin2' });
 
-      setTimeout(async () => {
-        const features = await map.current.queryRenderedFeatures({
-          layers: [],
-        });
-
-        const admin0Features = map.current.querySourceFeatures('admin0', {
-          sourceLayer: 'ne_10m_admin_0_map_units-10f1rr'
-        });
-
-        const names = [
-          ...new Set(admin0Features.map(f => f.properties.ADMIN))
-        ].sort();
-
-        setCountryList(names);
-      }, 1000); // wait 1 second after load
-
-
+      // Add malaria risk layers
       map.current.addLayer({
-        id: 'adm1-risk', type: 'fill', source: 'admin1', 'source-layer': 'layer_name',
-        minzoom: 0, maxzoom: 24,
+        id: 'adm1-risk',
+        type: 'fill',
+        source: 'admin1',
+        'source-layer': 'layer_name',
+        minzoom: 0,
+        maxzoom: 24,
         paint: {
           'fill-color': [
             'case',
@@ -127,8 +150,12 @@ function App() {
       });
 
       map.current.addLayer({
-        id: 'adm2-risk', type: 'fill', source: 'admin2', 'source-layer': 'admin2',
-        minzoom: 6, maxzoom: 24,
+        id: 'adm2-risk',
+        type: 'fill',
+        source: 'admin2',
+        'source-layer': 'admin2',
+        minzoom: 6,
+        maxzoom: 24,
         paint: {
           'fill-color': [
             'case',
@@ -143,58 +170,114 @@ function App() {
         layout: { visibility: 'visible' }
       });
 
+      // Add elevation (EE) layers
       map.current.addSource('ee-elevation-mask', {
         type: 'raster',
         tiles: ['https://earthengine.googleapis.com/v1/projects/ee-jsaita47/maps/832ca37bd68e2f8dd8f5b43c7ad59289-d756dffaf5be4871711ec6a037369b3e/tiles/{z}/{x}/{y}'],
         tileSize: 256
       });
       map.current.addLayer({
-        id: 'ee-elevation-layer', type: 'raster', source: 'ee-elevation-mask',
-        minzoom: 0, maxzoom: 24,
+        id: 'ee-elevation-layer',
+        type: 'raster',
+        source: 'ee-elevation-mask',
+        minzoom: 0,
+        maxzoom: 24,
         paint: { 'raster-opacity': 0.6 },
         layout: { visibility: 'visible' }
       });
 
+      // Add elevation mask layer
       map.current.addSource('elevation-mask', {
         type: 'raster',
         tiles: ['https://earthengine.googleapis.com/v1/projects/ee-jsaita47/maps/27d0c579099b744e9b31abc0664b452b-60153c192d6e0967a1ca3de21cd6f69f/tiles/{z}/{x}/{y}'],
         tileSize: 256
       });
       map.current.addLayer({
-        id: 'elevation-layer', type: 'raster', source: 'elevation-mask',
-        minzoom: 0, maxzoom: 24,
+        id: 'elevation-layer',
+        type: 'raster',
+        source: 'elevation-mask',
+        minzoom: 0,
+        maxzoom: 24,
         paint: { 'raster-opacity': 0.6 },
         layout: { visibility: 'none' }
       });
 
+      // Add terrain + hillshade
       map.current.addSource('terrain-source', {
         type: 'raster-dem',
         url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
         tileSize: 512,
         maxzoom: 14
       });
-
-
       map.current.addSource('hillshade-source', {
         type: 'raster-dem',
         url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
         tileSize: 512,
         maxzoom: 14
       });
-
       map.current.addLayer({
         id: 'hillshade-layer',
         type: 'hillshade',
         source: 'hillshade-source',
-        layout: { visibility: 'none' },
-        paint: { 'hillshade-exaggeration': 1 }
+        paint: { 'hillshade-exaggeration': 1 },
+        layout: { visibility: 'none' }
       }, 'elevation-layer');
+      // Add mask layer for admin0, initially hidden
+      map.current.addLayer({
+        id: 'admin0-mask',
+        type: 'fill',
+        source: 'admin0',
+        'source-layer': 'ne_10m_admin_0_map_units-10f1rr',
+        paint: {
+          'fill-color': '#cccccc',
+          'fill-opacity': 1
+        },
+        layout: { visibility: 'none' },
+        filter: ['!=', 'ISO_A2', '']
+      });
 
-      map.current.addLayer({ id: 'adm2-boundary', type: 'line', source: 'admin2', 'source-layer': 'admin2', minzoom: 6, maxzoom: 24, paint: { 'line-color': '#FFFFFF', 'line-width': 0.5 } });
-      map.current.addLayer({ id: 'adm1-boundary', type: 'line', source: 'admin1', 'source-layer': 'layer_name', minzoom: 3, maxzoom: 10, paint: { 'line-color': '#999', 'line-width': 0.5 } });
-      map.current.addLayer({ id: 'adm0-boundary', type: 'line', source: 'admin0', 'source-layer': 'ne_10m_admin_0_map_units-10f1rr', minzoom: 0, maxzoom: 6, paint: { 'line-color': '#333', 'line-width': 0.5 } });
+      // Add boundary lines on top
+      map.current.addLayer({
+        id: 'adm2-boundary',
+        type: 'line',
+        source: 'admin2',
+        'source-layer': 'admin2',
+        minzoom: 6,
+        maxzoom: 24,
+        paint: { 'line-color': '#FFFFFF', 'line-width': 0.5 }
+      });
+      map.current.addLayer({
+        id: 'adm1-boundary',
+        type: 'line',
+        source: 'admin1',
+        'source-layer': 'layer_name',
+        minzoom: 3,
+        maxzoom: 10,
+        paint: { 'line-color': '#999', 'line-width': 0.5 }
+      });
+      map.current.addLayer({
+        id: 'adm0-boundary',
+        type: 'line',
+        source: 'admin0',
+        'source-layer': 'ne_10m_admin_0_map_units-10f1rr',
+        minzoom: 0,
+        maxzoom: 15,
+        paint: { 'line-color': '#333', 'line-width': 0.5 }
+      });
     });
   }, []);
+
+  // Whenever selectedCountry changes, update the mask filter & visibility
+  useEffect(() => {
+    if (!map.current || !map.current.getLayer('admin0-mask')) return;
+    if (selectedCountry) {
+      const { iso } = countryLookup[selectedCountry];
+      map.current.setFilter('admin0-mask', ['!=', 'ISO_A2', iso]);
+      map.current.setLayoutProperty('admin0-mask', 'visibility', 'visible');
+    } else {
+      map.current.setLayoutProperty('admin0-mask', 'visibility', 'none');
+    }
+  }, [selectedCountry]);
 
   const zoomIn = () => map.current && map.current.zoomTo(map.current.getZoom() + 1);
   const zoomOut = () => map.current && map.current.zoomTo(map.current.getZoom() - 1);
@@ -204,9 +287,17 @@ function App() {
       <header className="menu-bar">
         <div className="logo">GIDEON</div>
         <nav className="nav-links">
-          <a href="#">Explore</a><a href="#">Lab</a><a href="#">Diagnose</a><a href="#">Visualize</a><a href="#">Compare</a><a href="#">A-Z</a><a href="#">More</a>
+          <a href="#">Explore</a>
+          <a href="#">Lab</a>
+          <a href="#">Diagnose</a>
+          <a href="#">Visualize</a>
+          <a href="#">Compare</a>
+          <a href="#">A-Z</a>
+          <a href="#">More</a>
         </nav>
-        <div className="search-bar"><input type="text" placeholder="Search..." /></div>
+        <div className="search-bar">
+          <input type="text" placeholder="Search..." />
+        </div>
       </header>
 
       <div ref={mapContainer} className="map-container" />
@@ -220,32 +311,62 @@ function App() {
         {showRiskLegend && (
           <>
             <h4>Malaria Risk Levels</h4>
-            <div><span className="legend-color" style={{ background: '#ff0000' }}></span> High Risk</div>
-            <div><span className="legend-color" style={{ background: '#ffa500' }}></span> Moderate Risk</div>
-            <div><span className="legend-color" style={{ background: '#ffff00' }}></span> Low Risk</div>
-            <div><span className="legend-color" style={{ background: '#00ff00' }}></span> No Known Risk</div>
+            <div>
+              <span className="legend-color" style={{ background: '#ff0000' }} /> High Risk
+            </div>
+            <div>
+              <span className="legend-color" style={{ background: '#ffa500' }} /> Moderate Risk
+            </div>
+            <div>
+              <span className="legend-color" style={{ background: '#ffff00' }} /> Low Risk
+            </div>
+            <div>
+              <span className="legend-color" style={{ background: '#00ff00' }} /> No Known Risk
+            </div>
           </>
         )}
         {showElevationLegend && (
           <>
             <h4>Elevation Ranges (meters)</h4>
-            <div><span className="legend-color" style={{ background: '#FF0000' }}></span> &lt; 500</div>
-            <div><span className="legend-color" style={{ background: '#FF7F00' }}></span> 500–1000</div>
-            <div><span className="legend-color" style={{ background: '#FFFF00' }}></span> 1000–1500</div>
-            <div><span className="legend-color" style={{ background: '#7FFF00' }}></span> 1500–2000</div>
-            <div><span className="legend-color" style={{ background: '#00FF00' }}></span> 2000–2500</div>
-            <div><span className="legend-color" style={{ background: '#00FF7F' }}></span> 2500–3000</div>
-            <div><span className="legend-color" style={{ background: '#00FFFF' }}></span> 3000–3500</div>
-            <div><span className="legend-color" style={{ background: '#007FFF' }}></span> 3500–4000</div>
-            <div><span className="legend-color" style={{ background: '#0000FF' }}></span> &gt; 4000</div>
+            <div>
+              <span className="legend-color" style={{ background: '#FF0000' }} /> &lt; 500
+            </div>
+            <div>
+              <span className="legend-color" style={{ background: '#FF7F00' }} /> 500–1000
+            </div>
+            <div>
+              <span className="legend-color" style={{ background: '#FFFF00' }} /> 1000–1500
+            </div>
+            <div>
+              <span className="legend-color" style={{ background: '#7FFF00' }} /> 1500–2000
+            </div>
+            <div>
+              <span className="legend-color" style={{ background: '#00FF00' }} /> 2000–2500
+            </div>
+            <div>
+              <span className="legend-color" style={{ background: '#00FF7F' }} /> 2500–3000
+            </div>
+            <div>
+              <span className="legend-color" style={{ background: '#00FFFF' }} /> 3000–3500
+            </div>
+            <div>
+              <span className="legend-color" style={{ background: '#007FFF' }} /> 3500–4000
+            </div>
+            <div>
+              <span className="legend-color" style={{ background: '#0000FF' }} /> &gt; 4000
+            </div>
           </>
         )}
       </div>
+
       <div className="country-select-panel">
-        <button className="country-toggle-btn" onClick={() => {
-          const dropdown = document.querySelector('.country-dropdown');
-          dropdown.classList.toggle('visible');
-        }}>
+        <button
+          className="country-toggle-btn"
+          onClick={() => {
+            const dropdown = document.querySelector('.country-dropdown');
+            dropdown.classList.toggle('visible');
+          }}
+        >
           Select Country ▼
         </button>
         <div className="country-dropdown scrollable-legend">
@@ -258,7 +379,12 @@ function App() {
       </div>
 
       <div className="layers-panel">
-        <button className="layers-toggle-btn" onClick={() => document.querySelector('.layers-dropdown').classList.toggle('visible')}>Layers</button>
+        <button
+          className="layers-toggle-btn"
+          onClick={() => document.querySelector('.layers-dropdown').classList.toggle('visible')}
+        >
+          Layers
+        </button>
         <div className="layers-dropdown">
           <label>
             <input
@@ -267,23 +393,17 @@ function App() {
               checked={showRiskLegend}
               onChange={(e) => {
                 const isChecked = e.target.checked;
-
-                ['adm1-risk', 'adm2-risk', 'ee-elevation-layer'].forEach(id => {
+                ['adm1-risk', 'adm2-risk', 'ee-elevation-layer'].forEach((id) => {
                   if (map.current.getLayer(id)) {
                     map.current.setLayoutProperty(id, 'visibility', isChecked ? 'visible' : 'none');
                   }
                 });
-
                 setShowRiskLegend(isChecked);
-
-                // Turn OFF Elevation if Risk Map is ON
                 if (isChecked) {
                   if (map.current.getLayer('elevation-layer')) {
                     map.current.setLayoutProperty('elevation-layer', 'visibility', 'none');
                   }
                   setShowElevationLegend(false);
-
-                  // Uncheck the elevation checkbox in DOM
                   const elevationCheckbox = document.querySelector('#elevation-checkbox');
                   if (elevationCheckbox) elevationCheckbox.checked = false;
                 }
@@ -298,24 +418,17 @@ function App() {
               checked={showElevationLegend}
               onChange={(e) => {
                 const isChecked = e.target.checked;
-
-                // Toggle Elevation layer
                 if (map.current.getLayer('elevation-layer')) {
                   map.current.setLayoutProperty('elevation-layer', 'visibility', isChecked ? 'visible' : 'none');
                 }
-
                 setShowElevationLegend(isChecked);
-
-                // Turn OFF risk layers if Elevation is ON
                 if (isChecked) {
-                  ['adm1-risk', 'adm2-risk', 'ee-elevation-layer'].forEach(id => {
+                  ['adm1-risk', 'adm2-risk', 'ee-elevation-layer'].forEach((id) => {
                     if (map.current.getLayer(id)) {
                       map.current.setLayoutProperty(id, 'visibility', 'none');
                     }
                   });
                   setShowRiskLegend(false);
-
-                  // Also uncheck the Risk checkbox in DOM
                   const riskCheckbox = document.querySelector('#risk-map-checkbox');
                   if (riskCheckbox) riskCheckbox.checked = false;
                 }
@@ -329,16 +442,12 @@ function App() {
               type="checkbox"
               onChange={(e) => {
                 const enabled = e.target.checked;
-
                 if (map.current) {
-                  // Toggle terrain elevation surface
                   if (enabled) {
                     map.current.setTerrain({ source: 'terrain-source', exaggeration: 1.5 });
                   } else {
                     map.current.setTerrain(null);
                   }
-
-                  // Toggle hillshade visibility
                   if (map.current.getLayer('hillshade-layer')) {
                     map.current.setLayoutProperty('hillshade-layer', 'visibility', enabled ? 'visible' : 'none');
                   }
@@ -347,15 +456,16 @@ function App() {
             />
             Terrain
           </label>
-
-
         </div>
       </div>
 
       <footer className="footer">
         <div>Copyright © 1994 - 2025 GIDEON Informatics, Inc. All Rights Reserved.</div>
         <div className="footer-links">
-          <a href="#">Site Map</a><a href="#">Help</a><a href="#">License Agreement</a><a href="#">Get in touch</a>
+          <a href="#">Site Map</a>
+          <a href="#">Help</a>
+          <a href="#">License Agreement</a>
+          <a href="#">Get in touch</a>
         </div>
       </footer>
     </div>
