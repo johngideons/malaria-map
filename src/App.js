@@ -19,7 +19,6 @@ function App() {
 
     // Step 1: Reset to initial zoom and center
     map.current.easeTo({
-      center: [20, 5],
       zoom: 2.5,
       duration: 1000,
       essential: true
@@ -158,7 +157,7 @@ function App() {
 
       map.current.addSource('elevation-mask', {
         type: 'raster',
-        tiles: ['https://earthengine.googleapis.com/v1/projects/ee-jsaita47/maps/3dda07fa64625e86bff5f57da8fe4aff-197c5fcef3b64302d2e54216a41750f1/tiles/{z}/{x}/{y}'],
+        tiles: ['https://earthengine.googleapis.com/v1/projects/ee-jsaita47/maps/27d0c579099b744e9b31abc0664b452b-60153c192d6e0967a1ca3de21cd6f69f/tiles/{z}/{x}/{y}'],
         tileSize: 256
       });
       map.current.addLayer({
