@@ -154,7 +154,7 @@ function App() {
         type: 'fill',
         source: 'admin2',
         'source-layer': 'admin2',
-        minzoom: 6,
+        minzoom: 3,
         maxzoom: 24,
         paint: {
           'fill-color': [
