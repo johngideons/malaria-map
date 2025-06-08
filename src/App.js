@@ -203,25 +203,110 @@ function App() {
       });
 
       // Add terrain + hillshade
-      map.current.addSource('terrain-source', {
-        type: 'raster-dem',
-        url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
-        tileSize: 512,
-        maxzoom: 14
-      });
+      // Add terrain + hillshade
       map.current.addSource('hillshade-source', {
         type: 'raster-dem',
         url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
         tileSize: 512,
         maxzoom: 14
       });
+
       map.current.addLayer({
         id: 'hillshade-layer',
         type: 'hillshade',
         source: 'hillshade-source',
-        paint: { 'hillshade-exaggeration': 1 },
+        paint: {
+          'hillshade-exaggeration': 1,
+          'hillshade-shadow-color': '#000000',    // pure black shadows
+          'hillshade-highlight-color': '#ffffff', // pure white highlights
+          'hillshade-accent-color': '#888888'     // neutral gray accents
+        },
         layout: { visibility: 'none' }
       }, 'elevation-layer');
+
+
+
+      // Add contour lines layer
+      map.current.addLayer({
+        id: 'contours',
+        type: 'line',
+        source: {
+          type: 'vector',
+          url: 'mapbox://mapbox.mapbox-terrain-v2'
+        },
+        'source-layer': 'contour',
+        minzoom: 1,
+        maxzoom: 24,
+        layout: {
+          visibility: 'visible',
+          'line-join': 'round',
+          'line-cap': 'round'
+        },
+        paint: {
+          'line-color': '#877b59',
+          'line-width': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            1, 0.3,   // thin at low zoom
+            5, 0.6,
+            10, 1,
+            15, 1.5,
+            18, 2     // thicker at high zoom
+          ],
+          'line-opacity': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            1, 0.2,
+            4, 0.5,
+            8, 0.8,
+            12, 1
+          ]
+        }
+      });
+
+
+      // Add contour labels layer
+      map.current.addLayer({
+        id: 'contour-labels',
+        type: 'symbol',
+        source: {
+          type: 'vector',
+          url: 'mapbox://mapbox.mapbox-terrain-v2'
+        },
+        'source-layer': 'contour',
+        minzoom: 5, // show labels only from zoom level 5
+        layout: {
+          visibility: 'visible',
+          'symbol-placement': 'line',
+          'text-field': ['concat', ['to-string', ['get', 'ele']], 'm'],
+          'text-size': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            5, 10,
+            10, 12,
+            15, 14
+          ]
+        },
+        paint: {
+          'text-color': '#877b59',
+          'text-halo-width': 1,
+          'text-halo-color': '#fff',
+          'text-opacity': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            5, 0.2,
+            8, 0.8,
+            10, 1
+          ]
+        }
+      });
+
+
+
       // Add mask layer for admin0, initially hidden
       map.current.addLayer({
         id: 'admin0-mask',
@@ -414,6 +499,7 @@ function App() {
 
           <label>
             <input
+              id="elevation-checkbox"
               type="checkbox"
               checked={showElevationLegend}
               onChange={(e) => {
@@ -456,6 +542,22 @@ function App() {
             />
             Terrain
           </label>
+          <label>
+            <input
+              id="contours-checkbox"
+              type="checkbox"
+              onChange={(e) => {
+                const isChecked = e.target.checked;
+                ['contours', 'contour-labels'].forEach((id) => {
+                  if (map.current.getLayer(id)) {
+                    map.current.setLayoutProperty(id, 'visibility', isChecked ? 'visible' : 'none');
+                  }
+                });
+              }}
+            />
+            Contours
+          </label>
+
         </div>
       </div>
 
