@@ -306,6 +306,55 @@ function App() {
       });
 
 
+      // === Start of Country and Place Names Layers ===
+      map.current.addSource('mapbox-streets', {
+        type: 'vector',
+        url: 'mapbox://mapbox.mapbox-streets-v8'
+      });
+      map.current.addLayer({
+        id: 'country-labels',
+        type: 'symbol',
+        source: 'mapbox-streets',
+        'source-layer': 'country_label',
+        layout: {
+          'text-field': ['get', 'name_en'],
+          'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+          'text-size': 14,
+          'text-anchor': 'center'
+        },
+        paint: {
+          'text-color': '#000',
+          'text-halo-width': 1,
+          'text-halo-color': '#fff'
+        }
+      });
+
+      //Add  place labels
+      map.current.addLayer({
+        id: 'place-labels',
+        type: 'symbol',
+        source: 'mapbox-streets',
+        'source-layer': 'place_label',
+        layout: {
+          'text-field': ['get', 'name_en'],
+          'text-font': ['Open Sans Regular', 'Arial Unicode MS Regular'],
+          'text-size': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            3, 8,
+            10, 12
+          ],
+          'text-anchor': 'top'
+        },
+        paint: {
+          'text-color': '#333333', // bluish for cities/towns
+          'text-halo-width': 0.8,
+          'text-halo-color': '#ffffff'
+        }
+      });
+
+      //========End of Country and Place Labels========
 
       // Add mask layer for admin0, initially hidden
       map.current.addLayer({
