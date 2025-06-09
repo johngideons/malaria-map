@@ -95,7 +95,7 @@ function App() {
       setCountryList(['All Countries', ...uniqueNames]);
 
       // Malaria data processing
-      const response = await fetch('/malaria-map/json/malaria_v4.json');
+      const response = await fetch('/malaria-map/json/malaria_v5.json');
       const data = await response.json();
       const admin0RiskMap = {};
       const admin1RiskMap = {};
@@ -173,7 +173,7 @@ function App() {
       // Add elevation (EE) layers
       map.current.addSource('ee-elevation-mask', {
         type: 'raster',
-        tiles: ['https://earthengine.googleapis.com/v1/projects/ee-jsaita47/maps/9650a7275910edb08f245fec81de73ad-69bbdb116be51d2ec02442203d0ce23f/tiles/{z}/{x}/{y}'],
+        tiles: ['https://earthengine.googleapis.com/v1/projects/ee-jsaita47/maps/8001f3e069c2d5611cf4c0b5f33f1d26-d32bcddbe205d422559e420c85f31dbe/tiles/{z}/{x}/{y}'],
         tileSize: 256
       });
       map.current.addLayer({
@@ -189,7 +189,7 @@ function App() {
       // Add elevation mask layer
       map.current.addSource('elevation-mask', {
         type: 'raster',
-        tiles: ['https://earthengine.googleapis.com/v1/projects/ee-jsaita47/maps/27d0c579099b744e9b31abc0664b452b-60153c192d6e0967a1ca3de21cd6f69f/tiles/{z}/{x}/{y}'],
+        tiles: ['https://earthengine.googleapis.com/v1/projects/ee-jsaita47/maps/27d0c579099b744e9b31abc0664b452b-6297983e2f4a4e1252282b144883c264/tiles/{z}/{x}/{y}'],
         tileSize: 256
       });
       map.current.addLayer({
