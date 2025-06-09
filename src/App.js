@@ -189,7 +189,7 @@ function App() {
       // Add elevation mask layer
       map.current.addSource('elevation-mask', {
         type: 'raster',
-        tiles: ['https://earthengine.googleapis.com/v1/projects/ee-jsaita47/maps/27d0c579099b744e9b31abc0664b452b-6297983e2f4a4e1252282b144883c264/tiles/{z}/{x}/{y}'],
+        tiles: ['https://earthengine.googleapis.com/v1/projects/ee-jsaita47/maps/760ef1953bdd203e4e225025d3ddadb3-8aac4a4964e407571fca435c469ebf0a/tiles/{z}/{x}/{y}'],
         tileSize: 256
       });
       map.current.addLayer({
