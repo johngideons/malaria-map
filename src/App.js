@@ -70,7 +70,7 @@ function App() {
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/ksymes/ckcxhru700vpw1is0jx79xl16',
+      style: 'mapbox://styles/mapbox/light-v11',
       center: [20, 5],
       zoom: 2,
       pitch: 0,
@@ -95,7 +95,7 @@ function App() {
       setCountryList(['All Countries', ...uniqueNames]);
 
       // Malaria data processing
-      const response = await fetch('/malaria-map/json/malaria_v5.json');
+      const response = await fetch('/malaria-map/json/malaria_v6.json');
       const data = await response.json();
       const admin0RiskMap = {};
       const admin1RiskMap = {};
@@ -173,7 +173,7 @@ function App() {
       // Add elevation (EE) layers
       map.current.addSource('ee-elevation-mask', {
         type: 'raster',
-        tiles: ['https://earthengine.googleapis.com/v1/projects/ee-jsaita47/maps/8001f3e069c2d5611cf4c0b5f33f1d26-d32bcddbe205d422559e420c85f31dbe/tiles/{z}/{x}/{y}'],
+        tiles: ['https://earthengine.googleapis.com/v1/projects/ee-jsaita47/maps/d7a804f297a13463e7e234ff9d5019a6-246c603b1dfd5eec7f5c694927137930/tiles/{z}/{x}/{y}'],
         tileSize: 256
       });
       map.current.addLayer({
@@ -187,9 +187,10 @@ function App() {
       });
 
       // Add elevation mask layer
+      
       map.current.addSource('elevation-mask', {
         type: 'raster',
-        tiles: ['https://earthengine.googleapis.com/v1/projects/ee-jsaita47/maps/760ef1953bdd203e4e225025d3ddadb3-8aac4a4964e407571fca435c469ebf0a/tiles/{z}/{x}/{y}'],
+        tiles: ['https://earthengine.googleapis.com/v1/projects/ee-jsaita47/maps/760ef1953bdd203e4e225025d3ddadb3-cf8226a1302afdc0058efb184e93363f/tiles/{z}/{x}/{y}'],
         tileSize: 256
       });
       map.current.addLayer({
@@ -202,7 +203,6 @@ function App() {
         layout: { visibility: 'none' }
       });
 
-      // Add terrain + hillshade
       // Add terrain + hillshade
       map.current.addSource('hillshade-source', {
         type: 'raster-dem',
