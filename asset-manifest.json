@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/malaria-map/static/css/main.e27fbb6b.css",
-    "main.js": "/malaria-map/static/js/main.bd590f56.js",
+    "main.js": "/malaria-map/static/js/main.2743487b.js",
     "static/js/453.5d1fb295.chunk.js": "/malaria-map/static/js/453.5d1fb295.chunk.js",
     "index.html": "/malaria-map/index.html",
     "main.e27fbb6b.css.map": "/malaria-map/static/css/main.e27fbb6b.css.map",
-    "main.bd590f56.js.map": "/malaria-map/static/js/main.bd590f56.js.map",
+    "main.2743487b.js.map": "/malaria-map/static/js/main.2743487b.js.map",
     "453.5d1fb295.chunk.js.map": "/malaria-map/static/js/453.5d1fb295.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.e27fbb6b.css",
-    "static/js/main.bd590f56.js"
+    "static/js/main.2743487b.js"
   ]
 }
